@@ -6,7 +6,7 @@ require 'rails_routes_analyzer/version'
 Gem::Specification.new do |spec|
   spec.name          = "rails_routes_analyzer"
   spec.version       = RailsRoutesAnalyzer::VERSION
-  spec.authors       = ["Tarmo Tänav"]
+  spec.authors       = ["Bear Metal OÜ", "Tarmo Tänav"]
   spec.email         = ["tarmo@bearmetal.eu"]
 
   spec.summary       = %q{Helps clean up rails routes}
