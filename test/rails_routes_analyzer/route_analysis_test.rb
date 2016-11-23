@@ -6,6 +6,10 @@ module RailsRoutesAnalyzer
       Rails.application.routes_reloader.paths.clear
     end
 
+    def rails_3?
+      Rails.version =~ /\A3\./
+    end
+
     def setup_clean_routes
       Rails.application.routes_reloader.paths << Rails.root.join('routes_clean.rb')
       analysis = RouteAnalysis.new
@@ -30,19 +34,19 @@ module RailsRoutesAnalyzer
       analysis = setup_clean_routes
 
       assert_equal [
-	["home", :index],
-	["home", :show],
-	["full_items", :custom],
-	["full_items", :custom_index],
-	["full_items", :index],
-	["full_items", :create],
-	["full_items", :new],
-	["full_items", :edit],
-	["full_items", :show],
-	["full_items", :update],
-	["full_items", :update],
-	["full_items", :destroy],
-      ], analysis.route_log
+        [["routes_clean.rb:2", "root", "home"], "home", :index, (["GET"] unless rails_3?)],
+	[["routes_clean.rb:4", "resources", "home"], "home", :show, ["GET"]],
+	[["routes_clean.rb:7", "get", "full_items"], "full_items", :custom, ["GET"]],
+	[["routes_clean.rb:10", "get", "full_items"], "full_items", :custom_index, ["GET"]],
+	[["routes_clean.rb:5", "resources", "full_items"], "full_items", :index, ["GET"]],
+	[["routes_clean.rb:5", "resources", "full_items"], "full_items", :create, ["POST"]],
+	[["routes_clean.rb:5", "resources", "full_items"], "full_items", :new, ["GET"]],
+	[["routes_clean.rb:5", "resources", "full_items"], "full_items", :edit, ["GET"]],
+	[["routes_clean.rb:5", "resources", "full_items"], "full_items", :show, ["GET"]],
+        ([["routes_clean.rb:5", "resources", "full_items"], "full_items", :update, ["PATCH"]] unless rails_3?),
+	[["routes_clean.rb:5", "resources", "full_items"], "full_items", :update, ["PUT"]],
+	[["routes_clean.rb:5", "resources", "full_items"], "full_items", :destroy, ["DELETE"]],
+      ].compact, analysis.route_log
     end
 
     def test_fully_clean_routes_implemented_routes
@@ -60,7 +64,7 @@ module RailsRoutesAnalyzer
         ["FullItemsController", :new],
         ["FullItemsController", :show],
         ["FullItemsController", :update],
-      ]), analysis.implemented_routes
+      ].compact), analysis.implemented_routes
     end
 
     def setup_bad_routes
@@ -119,27 +123,27 @@ module RailsRoutesAnalyzer
       analysis = setup_bad_routes
 
       assert_equal [
-        ["home", :index],
-	["home", :index],
-	["home", :create],
-	["home", :new],
-	["home", :edit],
-	["home", :show],
-	["home", :update],
-	["home", :update],
-	["home", :destroy],
-	["full_items", :missing_member_action],
-	["full_items", :missing_collection_action],
-	["full_items", :create],
-	["full_items", :new],
-	["full_items", :edit],
-	["full_items", :show],
-	["full_items", :update],
-	["full_items", :update],
-	["full_items", :index],
-	["full_items", :destroy],
-	["unknown_controller", :index],
-      ], analysis.route_log
+	[["routes_bad.rb:2", "root", "home"], "home", :index, (["GET"] unless rails_3?)],
+	[["routes_bad.rb:4", "resources", "home"], "home", :index, ["GET"]],
+	[["routes_bad.rb:4", "resources", "home"], "home", :create, ["POST"]],
+	[["routes_bad.rb:4", "resources", "home"], "home", :new, ["GET"]],
+	[["routes_bad.rb:4", "resources", "home"], "home", :edit, ["GET"]],
+	[["routes_bad.rb:4", "resources", "home"], "home", :show, ["GET"]],
+	([["routes_bad.rb:4", "resources", "home"], "home", :update, ["PATCH"]] unless rails_3?),
+	[["routes_bad.rb:4", "resources", "home"], "home", :update, ["PUT"]],
+	[["routes_bad.rb:4", "resources", "home"], "home", :destroy, ["DELETE"]],
+	[["routes_bad.rb:7", "get", "full_items"], "full_items", :missing_member_action, ["GET"]],
+	[["routes_bad.rb:10", "post", "full_items"], "full_items", :missing_collection_action, ["POST"]],
+	[["routes_bad.rb:5", "resources", "full_items"], "full_items", :create, ["POST"]],
+	[["routes_bad.rb:5", "resources", "full_items"], "full_items", :new, ["GET"]],
+	[["routes_bad.rb:5", "resources", "full_items"], "full_items", :edit, ["GET"]],
+	[["routes_bad.rb:5", "resources", "full_items"], "full_items", :show, ["GET"]],
+	([["routes_bad.rb:5", "resources", "full_items"], "full_items", :update, ["PATCH"]] unless rails_3?),
+	[["routes_bad.rb:5", "resources", "full_items"], "full_items", :update, ["PUT"]],
+	[["routes_bad.rb:13", "resources", "full_items"], "full_items", :index, ["GET"]],
+	[["routes_bad.rb:13", "resources", "full_items"], "full_items", :destroy, ["DELETE"]],
+	[["routes_bad.rb:15", "get", "unknown_controller"], "unknown_controller", :index, ["GET"]],
+      ].compact, analysis.route_log
     end
 
     def test_bad_routes_implemented_routes

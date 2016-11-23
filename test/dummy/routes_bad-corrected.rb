@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  root 'home#index'
+  root to: 'home#index'
 
   resources :home # SUGGESTION use only: [:index, :show]
   resources :full_items, except: [:destroy, :index] do

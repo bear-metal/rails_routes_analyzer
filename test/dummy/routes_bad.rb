@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  root 'home#index'
+  root to: 'home#index'
 
   resources :home # SUGGESTION random old suggestion to be replaced
   resources :full_items, except: [:destroy, :index] do

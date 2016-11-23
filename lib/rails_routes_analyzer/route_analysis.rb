@@ -19,7 +19,6 @@ module RailsRoutesAnalyzer
 
       ::ActionDispatch::Routing::Mapper::Mapping.prepend RouteInterceptor
 
-      RouteInterceptor.route_data.clear
       RouteInterceptor.route_log.clear
 
       app.reload_routes!

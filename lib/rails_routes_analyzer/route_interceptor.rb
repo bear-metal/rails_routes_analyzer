@@ -1,3 +1,5 @@
+require 'rails'
+
 module RailsRoutesAnalyzer
 
   # Plugs into ActionDispatch::Routing::Mapper::Mapping to help get detailed information
@@ -6,7 +8,11 @@ module RailsRoutesAnalyzer
     ROUTE_METHOD_REGEX = /action_dispatch\/routing\/mapper.rb:[0-9]+:in `(#{Regexp.union(*::RailsRoutesAnalyzer::ROUTE_METHODS)})'\z/
 
     def self.route_data
-      @route_data ||= {}
+      {}.tap do |result|
+        route_log.each do |(location, controller_name, action, request_methods)|
+          (result[location] ||= []) << action
+        end
+      end
     end
 
     def self.route_log
@@ -37,20 +43,40 @@ module RailsRoutesAnalyzer
       end
     end
 
-    def check_controller_and_action(path_params, controller_name, action)
-      super.tap do
-        if controller_name && action
-          location = get_routes_rb_location + [controller_name]
-
-          if location[0].nil?
-            puts "Failed to find call location for: #{controller_name}/#{action}"
-          else
-            (RouteInterceptor.route_data[location] ||= []) << action.to_sym
-            RouteInterceptor.route_log << [controller_name, action.to_sym]
-          end
+    if Rails.version =~ /\A3[.]/
+      def initialize(*args)
+        super.tap do
+          record_route(@options[:controller], @options[:action], conditions[:request_method])
+        end
+      end
+    elsif Rails.version =~ /\A4\./
+      def initialize(*args)
+        super.tap do
+          record_route(@defaults[:controller], @defaults[:action], conditions[:request_method])
+        end
+      end
+    else # Rails 5+
+      def initialize(*args)
+        super.tap do
+          record_route(@defaults[:controller], @defaults[:action], request_method.map(&:verb))
         end
       end
     end
+
+    def record_route(controller_name, action, request_methods)
+      return unless controller_name && action
+
+      location = get_routes_rb_location + [controller_name]
+
+      if location[0].nil?
+        puts "Failed to find call location for: #{controller_name}/#{action}"
+      else
+        record = [location, controller_name, action.to_sym, request_methods]
+
+        RouteInterceptor.route_log << record
+      end
+    end
+
   end
 
 end

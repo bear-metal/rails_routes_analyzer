@@ -3,6 +3,15 @@ language: ruby
 cache: bundler
 bundler_args: --quiet
 rvm:
+  - 2.1.10
   - 2.2.3
   - 2.3.1
+gemfile:
+  - Gemfile_3.2
+  - Gemfile_4.2
+  - Gemfile
+matrix:
+  exclude:
+  - rvm: 2.1.10
+    gemfile: Gemfile
 before_install: gem install bundler -v 1.13.6
