@@ -3,7 +3,7 @@ module RailsRoutesAnalyzer
   class RouteAnalysis
     attr_accessor :app, :verbose, :only_only, :only_except
     attr_accessor :implemented_routes, :route_log
-    attr_writer :issues
+    attr_writer :all_issues
 
     def initialize(app: Rails.application, verbose: false, only_only: false, only_except: false)
       self.app         = app
@@ -25,7 +25,7 @@ module RailsRoutesAnalyzer
       app.reload_routes!
 
       implemented_routes = Set.new
-      issues = []
+      all_issues = []
 
       RouteInterceptor.route_data.each do |(file_location, route_creation_method, controller_name), action_names|
         controller_class_name = "#{controller_name}_controller".camelize
@@ -38,29 +38,32 @@ module RailsRoutesAnalyzer
           controller_name:       controller_name,
           controller_class_name: controller_class_name,
           action_names:          action_names,
-          error:                 nil,
         }
 
         controller = nil
         begin
           controller = Object.const_get(controller_class_name)
         rescue LoadError, RuntimeError, NameError => e
-          issues << RouteIssue.new(opts.merge(type: :no_controller, error: e.message, suggestion: "delete, #{controller_class_name} not found"))
+          all_issues << RouteIssue.new(opts.merge(type: :no_controller, error: e.message))
           next
         end
 
         if controller.nil?
-          issues << RouteIssue.new(opts.merge(type: :no_controller, suggestion: "delete, #{controller_class_name} not found"))
+          all_issues << RouteIssue.new(opts.merge(type: :no_controller))
           next
         end
 
         present, missing = action_names.partition {|name| controller.action_methods.include?(name.to_s) }
         extra = action_names - RESOURCE_ACTIONS
 
+        if present.any?
+          all_issues << RouteIssue.new(opts.merge(type: :non_issue, present_actions: present))
+        end
+
         if SINGLE_METHODS.include?(route_creation_method)
           # NOTE a single call like 'get' can add multiple actions if called in a loop
-          missing.each do |action|
-            issues << RouteIssue.new(opts.merge(type: :no_action, action: action, suggestion: "action :#{action} not found for #{controller_class_name}"))
+          if missing.present?
+            all_issues << RouteIssue.new(opts.merge(type: :no_action, missing_actions: missing))
           end
 
           present.each do |action|
@@ -70,7 +73,9 @@ module RailsRoutesAnalyzer
           next
         end
 
-        present.each {|action_name| implemented_routes << [controller_class_name, action_name] }
+        present.each do |action|
+          implemented_routes << [controller_class_name, action]
+        end
 
         if missing.empty? # Everything is perfect
           next
@@ -83,34 +88,42 @@ module RailsRoutesAnalyzer
           next
         end
 
-        suggestion = if (present.size < 4 || only_only) && !only_except
+        suggested_param = if (present.size < 4 || only_only) && !only_except
           "only: [#{present.sort.map {|x| ":#{x}" }.join(', ')}]"
         else
           "except: [#{(RESOURCE_ACTIONS - present).sort.map {|x| ":#{x}" }.join(', ')}]"
         end
 
         if verbose
-          suggestion << " | This route currently covers unimplemented actions: [#{missing.sort.map {|x| ":#{x}" }.join(', ')}]"
+          verbose_message = "This route currently covers unimplemented actions: [#{missing.sort.map {|x| ":#{x}" }.join(', ')}]"
         end
 
-        issues << RouteIssue.new(opts.merge(type: :suggestion, suggestion: suggestion))
+        all_issues << RouteIssue.new(opts.merge(type: :resources, suggested_param: suggested_param, verbose_message: verbose_message))
       end
 
       self.implemented_routes = implemented_routes
       self.route_log = RouteInterceptor.route_log.dup
-      self.issues = issues
+      self.all_issues = all_issues
+    end
+
+    def all_issues
+      @all_issues || []
     end
 
     def issues
-      @issues || []
+      all_issues.select(&:issue?)
     end
 
-    def unique_issues_file_names
-      issues.map { |issue| issue.full_filename }.uniq.sort
+    def non_issues
+      all_issues.reject(&:issue?)
     end
 
-    def issues_for_file_name(full_filename)
-      issues.select { |issue| issue.full_filename == full_filename.to_s }
+    def all_unique_issues_file_names
+      all_issues.map { |issue| issue.full_filename }.uniq.sort
+    end
+
+    def all_issues_for_file_name(full_filename)
+      all_issues.select { |issue| issue.full_filename == full_filename.to_s }
     end
   end
 

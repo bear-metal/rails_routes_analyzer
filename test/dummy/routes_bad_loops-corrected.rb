@@ -1,9 +1,9 @@
 Rails.application.routes.draw do
   [:something, :full_items].each do |controller|
-    resource controller, only: [:destroy] # SUGGESTION delete, SomethingsController not found
+    resource controller, only: [:destroy] # SUGGESTION remove case for SomethingsController as it doesn't exist
   end
 
   [:index, :unknown_action, :other_action].each do |action|
-    get "home/#{action}", action: action, controller: 'home' # SUGGESTION action :other_action not found for HomeController, action :unknown_action not found for HomeController
+    get "home/#{action}", action: action, controller: 'home' # SUGGESTION remove cases for [:other_action, :unknown_action]
   end
 end

@@ -6,22 +6,23 @@ module RailsRoutesAnalyzer
     end
 
     def annotated_file_content(route_filename)
-      relevant_issues = @analysis.issues_for_file_name(route_filename)
+      relevant_issues = @analysis.all_issues_for_file_name(route_filename)
 
-      if relevant_issues.empty?
-        STDERR.puts "Didn't find any route issues for file: #{route_filename}, only have references to: #{@analysis.unique_issues_file_names.join(', ')}"
+      if relevant_issues.none?(&:issue?)
+        log_notice { "Didn't find any route issues for file: #{route_filename}, only have references to: #{@analysis.all_unique_issues_file_names.join(', ')}" }
       end
 
-      STDERR.puts "Annotating #{route_filename}"
+      log_notice { "Annotating #{route_filename}" }
 
       lines = File.readlines(route_filename)
       issue_map = relevant_issues.group_by { |issue| issue.line_number }
 
       "".tap do |output|
         File.readlines(route_filename).each_with_index do |line, index|
-          issues = (issue_map[index + 1] || []).map(&:suggestion).compact.uniq.join(', ')
-          if issues.present?
-            output << line.sub(/$/, " # SUGGESTION #{issues}")
+          suggestion = combined_suggestion_for(issue_map[index + 1])
+
+          if suggestion.present?
+            output << line.sub(/$/, " # SUGGESTION #{suggestion}")
           else
             output << line
           end
@@ -29,8 +30,27 @@ module RailsRoutesAnalyzer
       end
     end
 
+    def log_notice(message=nil, &block)
+      return if ENV['RAILS_ENV'] == 'test'
+      message ||= block.call if block
+      STDERR.puts message
+    end
+
+    def combined_suggestion_for(all_issues)
+      return if all_issues.nil? || all_issues.none?(&:issue?)
+
+      issues, non_issues = all_issues.partition(&:issue?)
+
+      context = {
+        non_issues: non_issues.present?,
+        num_controllers: all_issues.map(&:controller_class_name).uniq.count,
+      }
+
+      issues.map { |issue| issue.suggestion(**context) }.join(', ')
+    end
+
     def annotate_routes_file(filename_or_one)
-      filenames = @analysis.unique_issues_file_names
+      filenames = @analysis.all_unique_issues_file_names
 
       if filename_or_one == '1'
         if filenames.size > 1

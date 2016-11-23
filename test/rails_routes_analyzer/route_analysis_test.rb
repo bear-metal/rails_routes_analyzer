@@ -79,9 +79,9 @@ module RailsRoutesAnalyzer
         controller_name: "home",
         controller_class_name: "HomeController",
         action_names: [:create, :destroy, :edit, :index, :new, :show, :update],
-        error: nil,
-        type: :suggestion,
-        suggestion: "only: [:index, :show]",
+        type: :resources,
+        suggested_param: "only: [:index, :show]",
+        verbose_message: nil,
       ), issues["routes_bad.rb:4"]
 
       assert_equal RouteIssue.new(
@@ -90,10 +90,8 @@ module RailsRoutesAnalyzer
         controller_name: "full_items",
         controller_class_name: "FullItemsController",
         action_names: [:missing_member_action],
-        error: nil,
         type: :no_action,
-        action: :missing_member_action,
-        suggestion: "action :missing_member_action not found for FullItemsController",
+        missing_actions: [:missing_member_action],
       ), issues["routes_bad.rb:7"]
 
       assert_equal RouteIssue.new(
@@ -102,10 +100,8 @@ module RailsRoutesAnalyzer
         controller_name: "full_items",
         controller_class_name: "FullItemsController",
         action_names: [:missing_collection_action],
-        error: nil,
         type: :no_action,
-        action: :missing_collection_action,
-        suggestion: "action :missing_collection_action not found for FullItemsController",
+        missing_actions: [:missing_collection_action],
       ), issues["routes_bad.rb:10"]
 
       assert_equal RouteIssue.new(
@@ -116,10 +112,7 @@ module RailsRoutesAnalyzer
         action_names: [:index],
         error: "uninitialized constant UnknownControllerController",
         type: :no_controller,
-        suggestion: "delete, UnknownControllerController not found",
       ), issues["routes_bad.rb:15"]
-
-      p issues.keys
     end
 
     def test_bad_routes_route_log
@@ -185,11 +178,9 @@ module RailsRoutesAnalyzer
 	action_names: [:destroy],
 	error: "uninitialized constant SomethingsController",
 	type: :no_controller,
-	suggestion: "delete, SomethingsController not found",
       ), issues_for_3[0]
 
-      issues_for_7 = issues["routes_bad_loops.rb:7"].group_by(&:action)
-      assert_equal 2, issues_for_7.size
+      issues_for_7 = issues["routes_bad_loops.rb:7"]
 
       assert_equal RouteIssue.new(
         file_location: "routes_bad_loops.rb:7",
@@ -197,23 +188,9 @@ module RailsRoutesAnalyzer
         controller_name: "home",
         controller_class_name: "HomeController",
         action_names: [:index, :other_action, :unknown_action],
-        error: nil,
         type: :no_action,
-        action: :other_action,
-        suggestion: "action :other_action not found for HomeController",
-      ), issues_for_7[:other_action][0]
-
-      assert_equal RouteIssue.new(
-        file_location: "routes_bad_loops.rb:7",
-        route_creation_method: "get",
-        controller_name: "home",
-        controller_class_name: "HomeController",
-        action_names: [:index, :other_action, :unknown_action],
-        error: nil,
-        type: :no_action,
-        action: :unknown_action,
-        suggestion: "action :unknown_action not found for HomeController",
-      ), issues_for_7[:unknown_action][0]
+        missing_actions: [:other_action, :unknown_action],
+      ), issues_for_7[0]
     end
   end
 end
