@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/bear-metal/rails_route_analyzer.svg)](https://travis-ci.org/bear-metal/rails_route_analyzer)
 
-This gem adds rake tasks to detect extraneous routes and unreachable controller actions Ruby on Rails applications. It tries to provide suggestions on how to change routes.rb to avoid defining dead routes and is also able to generate an annotated version of a route file with suggestions for each line added as comments.
+This gem adds rake tasks to detect extraneous routes and unreachable controller actions Ruby on Rails applications. It's also able to provide suggestions on how to change routes.rb to avoid defining dead routes and can generate an annotated version of a route file with suggestions for each line added as comments.
 
 ## Installation
 
@@ -27,21 +27,16 @@ For multi-route calls like `resource' and `resources' it can also let you know i
 For complex cases where for example a routes are created in a loop for multiple controllers a suggestion will be provided for each iteration but only if that specific iteration created a dead route. Every such suggestion will identify the exact controller to which it applies.
 
 ``` sh
-rake routes:dead ANNOTATE=1
+rake routes:annotate_dead [ANNOTATE=path/to/routes.rb]
 ```
 
-This will output an annotated version of config/routes.rb
+This will output an annotated version of config/routes.rb or any other routes file as provided in the ANNOTATE parameter.
 
-``` sh
-rake routes:dead ANNOTATE=path/to/any/routes.rb
-```
-
-Same as above but allows specifying the exact file to annotate in case the application loads routes from multiple files.
 
 Additional options:
 
-* ONLY\_ONLY=1 - suggestions for resource(s) will only generate "only:" regardless of how many elements are listed.
-* ONLY\_EXCEPT=1 - suggestions for resource(s) will only generate "except:" regardless of how many elements are listed.
+* ONLY\_ONLY=1 - suggestions for resource routes will only generate "only:" regardless of how many elements are listed.
+* ONLY\_EXCEPT=1 - suggestions for resource routes will only generate "except:" regardless of how many elements are listed.
 * VERBOSE=1 - more verbosity, currently this means listing which non-existing actions a given call provides routes for.
 
 ```sh

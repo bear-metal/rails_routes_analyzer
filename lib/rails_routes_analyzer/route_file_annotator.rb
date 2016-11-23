@@ -1,7 +1,7 @@
 module RailsRoutesAnalyzer
 
   class RouteFileAnnotator
-    def initialize(analysis:)
+    def initialize(analysis: RailsRoutesAnalyzer::RouteAnalysis.new)
       @analysis = analysis
     end
 
@@ -33,7 +33,7 @@ module RailsRoutesAnalyzer
     def log_notice(message=nil, &block)
       return if ENV['RAILS_ENV'] == 'test'
       message ||= block.call if block
-      STDERR.puts message
+      STDERR.puts "# #{message}" if message.present?
     end
 
     def combined_suggestion_for(all_issues)
@@ -49,17 +49,15 @@ module RailsRoutesAnalyzer
       issues.map { |issue| issue.suggestion(**context) }.join(', ')
     end
 
-    def annotate_routes_file(filename_or_one)
-      filenames = @analysis.all_unique_issues_file_names
+    def annotate_routes_file(filename)
+      filenames = @analysis.unique_issues_file_names
 
-      if filename_or_one == '1'
+      if filename.blank?
         if filenames.size > 1
-          STDERR.puts "Please specify file to annotate as you have more than one: #{filenames.join(', ')}"
+          STDERR.puts "Please specify file to annotate with ANNOTATE='path/routes.rb' as you have more than one:\n#{filenames.join("\n  ")}"
           exit 1
         end
         filename = filenames.first
-      else
-        filename = filename_or_one
       end
 
       filename = RailsRoutesAnalyzer.get_full_filename(filename)

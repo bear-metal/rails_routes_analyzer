@@ -12,14 +12,15 @@ namespace :routes do
       return
     end
 
-    if filename_or_one = ENV['ANNOTATE']
-      annotator = RailsRoutesAnalyzer::RouteFileAnnotator.new(analysis: analysis)
-      annotator.annotate_routes_file(filename_or_one)
-    else
-      analysis.issues.each do |issue|
-        puts issue.human_readable
-      end
+    analysis.issues.each do |issue|
+      puts issue.human_readable
     end
+  end
+
+  desc "Output a routes file with suggested modifications in comments (NOTE: doesn't touch the original file)"
+  task annotate_dead: :environment do
+    annotator = RailsRoutesAnalyzer::RouteFileAnnotator.new
+    annotator.annotate_routes_file(ENV['ANNOTATE'])
   end
 
   desc 'Scan for controller action methods that are missing a route (pass STRICT=1 to account for inherited actions)'

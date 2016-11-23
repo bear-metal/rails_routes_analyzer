@@ -110,6 +110,10 @@ module RailsRoutesAnalyzer
       all_issues.map { |issue| issue.full_filename }.uniq.sort
     end
 
+    def unique_issues_file_names
+      issues.map { |issue| issue.full_filename }.uniq.sort
+    end
+
     def all_issues_for_file_name(full_filename)
       all_issues.select { |issue| issue.full_filename == full_filename.to_s }
     end
