@@ -22,7 +22,7 @@ module RailsRoutesAnalyzer
           suggestion = combined_suggestion_for(issue_map[index + 1])
 
           if suggestion.present?
-            output << line.sub(/$/, " # SUGGESTION #{suggestion}")
+            output << line.sub(/( # SUGGESTION.*)?$/, " # SUGGESTION #{suggestion}")
           else
             output << line
           end

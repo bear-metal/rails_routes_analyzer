@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
   root 'home#index'
 
-  resources :home
+  resources :home # SUGGESTION random old suggestion to be replaced
   resources :full_items, except: [:destroy, :index] do
     member do
       get :missing_member_action
