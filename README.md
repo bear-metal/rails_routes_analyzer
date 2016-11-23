@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/bear-metal/rails_route_analyzer.svg)](https://travis-ci.org/bear-metal/rails_route_analyzer)
+[![Build Status](https://travis-ci.org/bear-metal/rails_routes_analyzer.svg)](https://travis-ci.org/bear-metal/rails_routes_analyzer)
 
 Adds rake tasks to detect extraneous routes and unreachable controller actions Ruby on Rails applications. It's also able to provide suggestions on how to change routes.rb to avoid defining dead routes and can generate an annotated version of a route file with suggestions for each line added as comments.
 
