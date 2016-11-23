@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/bear-metal/rails_route_analyzer.svg)](https://travis-ci.org/bear-metal/rails_route_analyzer)
 
-This gem adds rake tasks to detect extraneous routes and unreachable controller actions Ruby on Rails applications. It's also able to provide suggestions on how to change routes.rb to avoid defining dead routes and can generate an annotated version of a route file with suggestions for each line added as comments.
+Adds rake tasks to detect extraneous routes and unreachable controller actions Ruby on Rails applications. It's also able to provide suggestions on how to change routes.rb to avoid defining dead routes and can generate an annotated version of a route file with suggestions for each line added as comments.
 
 ## Installation
 
@@ -30,10 +30,10 @@ For complex cases where for example a routes are created in a loop for multiple 
 rake routes:annotate_dead [ANNOTATE=path/to/routes.rb]
 ```
 
-This will output an annotated version of config/routes.rb or any other routes file as provided in the ANNOTATE parameter.
+Will output an annotated version of config/routes.rb or any other routes file as provided in the ANNOTATE parameter.
 
 
-Additional options:
+#### Additional options:
 
 * ONLY\_ONLY=1 - suggestions for resource routes will only generate "only:" regardless of how many elements are listed.
 * ONLY\_EXCEPT=1 - suggestions for resource routes will only generate "except:" regardless of how many elements are listed.
@@ -43,15 +43,15 @@ Additional options:
 rake routes:missing
 ```
 
-Additional options:
+#### Additional options:
 
-Lists all action methods for all controllers which have no route pointing to them. This uses the (maybe not so well known) ActionController#Base.action\_methods method which usually returns a list of all public methods of the controller class excluding any special Rails provided methods. To make the output of ActionController#Base.action\_methods it would be ideal to try to make all application-provided controller methods non-public if they are not meant to be callable as an action. Alternatively it's also possible (but less desirable) to override the action\_methods call in any controller class to explicitly remove mis-characterised methods.
+Lists all action methods for all controllers which have no route pointing to them. Uses the (maybe not so well known) ActionController#Base.action\_methods method which usually returns a list of all public methods of the controller class excluding any special Rails provided methods. To make the output of ActionController#Base.action\_methods it would be ideal to try to make all application-provided controller methods non-public if they are not meant to be callable as an action. Alternatively it's also possible (but less desirable) to override the action\_methods call in any controller class to explicitly remove mis-characterised methods.
 
 * STRICT=1 - causes controller base class provided public methods to be considered as actions for a subclass controller and thus reported as errors if they lack routes. Enabling this can generate a lot of noise for applications that have public non-actions in a controller base class.
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/rails\_routes\_analyzer.
+Bug reports and pull requests are welcome on GitHub at https://github.com/bear-metal/rails_routes_analyzer.
 
 ## License
 
