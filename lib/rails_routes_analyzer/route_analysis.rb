@@ -2,7 +2,7 @@ module RailsRoutesAnalyzer
 
   class RouteAnalysis
     attr_accessor :app, :verbose, :only_only, :only_except
-    attr_accessor :implemented_routes, :route_log
+    attr_accessor :route_log
     attr_writer :all_issues
 
     def initialize(app: Rails.application, verbose: false, only_only: false, only_except: false)
@@ -24,7 +24,6 @@ module RailsRoutesAnalyzer
 
       app.reload_routes!
 
-      implemented_routes = Set.new
       all_issues = []
 
       RouteInterceptor.route_data.each do |(file_location, route_creation_method, controller_name), action_names|
@@ -66,20 +65,10 @@ module RailsRoutesAnalyzer
             all_issues << RouteIssue.new(opts.merge(type: :no_action, missing_actions: missing))
           end
 
-          present.each do |action|
-            implemented_routes << [controller_class_name, action]
-          end
-
           next
         end
 
-        present.each do |action|
-          implemented_routes << [controller_class_name, action]
-        end
-
-        if missing.empty? # Everything is perfect
-          next
-        end
+        next if missing.empty? # Everything is perfect
 
         if present.sort == RESOURCE_ACTIONS.sort
           unless missing.empty?
@@ -101,7 +90,6 @@ module RailsRoutesAnalyzer
         all_issues << RouteIssue.new(opts.merge(type: :resources, suggested_param: suggested_param, verbose_message: verbose_message))
       end
 
-      self.implemented_routes = implemented_routes
       self.route_log = RouteInterceptor.route_log.dup
       self.all_issues = all_issues
     end
@@ -124,6 +112,16 @@ module RailsRoutesAnalyzer
 
     def all_issues_for_file_name(full_filename)
       all_issues.select { |issue| issue.full_filename == full_filename.to_s }
+    end
+
+    def implemented_routes
+      Set.new.tap do |implemented_routes|
+        non_issues.each do |non_issue|
+          non_issue.present_actions.each do |action|
+            implemented_routes << [non_issue.controller_class_name, action]
+          end
+        end
+      end
     end
   end
 
