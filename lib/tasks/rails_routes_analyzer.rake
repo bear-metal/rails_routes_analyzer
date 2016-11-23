@@ -9,7 +9,7 @@ namespace :routes do
 
     if analysis.issues.empty?
       puts "No route issues found"
-      return
+      exit 0
     end
 
     analysis.issues.each do |issue|
