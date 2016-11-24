@@ -8,6 +8,7 @@ Gem::Specification.new do |spec|
   spec.version       = RailsRoutesAnalyzer::VERSION
   spec.authors       = ["Bear Metal OÜ", "Tarmo Tänav"]
   spec.email         = ["tarmo@bearmetal.eu"]
+  spec.required_ruby_version = ">= 2.1.0"
 
   spec.summary       = %q{Helps clean up rails routes}
   #spec.description   = %q{}
