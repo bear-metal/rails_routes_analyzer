@@ -50,9 +50,18 @@ rake routes:missing
 
 #### Additional options:
 
-Lists all action methods for all controllers which have no route pointing to them. Uses the (maybe not so well known) ActionController#Base.action\_methods method which usually returns a list of all public methods of the controller class excluding any special Rails provided methods. To make the output of ActionController#Base.action\_methods it would be ideal to try to make all application-provided controller methods non-public if they are not meant to be callable as an action. Alternatively it's also possible (but less desirable) to override the action\_methods call in any controller class to explicitly remove mis-characterised methods.
+Lists all action methods for all controllers which have no route pointing to them (with ALL=1 it can also list every action). Uses the ActionController#Base.action\_methods method which usually returns a list of all public methods of the controller class excluding any special Rails provided methods.
 
-* STRICT=1 - causes controller base class provided public methods to be considered as actions for a subclass controller and thus reported as errors if they lack routes. Enabling this can generate a lot of noise for applications that have public non-actions in a controller base class.
+Generally it's not a problem to have ActionController#Base.action\_methods list non-actions given Rails no longer uses default routes that would benefit from proper limits on what is and what isn't an action. However there is also no obvious reason to be unable to correct it and possibly be able to use the more accurate metadata somewhere else (such as this tool).
+
+The easiest way to remove non-actions from ActionController#Base.action\_methods would be to make them protected or private. If that's not possible the other alternative is to override the action\_methods method itself and remove the relevant methods from the returned action list (this is more complicated and much more effort to keep updated.)
+
+* DUPLICATES=1 - causes controller base class provided public methods to be considered as actions for a subclass controller and thus reported as errors if they lack routes. Enabling this can generate a lot of noise for applications that have public non-actions in a controller base class.
+* GEMS=1 - includes actions that appear to be implemented by gems.
+* MODULES=1 - includes public controller methods inherited from modules that are listed in action_methods.
+* FULL_PATH=1 - disables file path shortening
+* METADATA=1 - lists collected data per action such as which gem it's from, if it's inherited from a superclass.
+* ALL=1 - lists all actions instead of only the ones that don't have routes.
 
 ## Contributing
 
