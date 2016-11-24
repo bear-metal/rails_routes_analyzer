@@ -23,40 +23,40 @@ namespace :routes do
     annotator.annotate_routes_file(ENV['ANNOTATE'])
   end
 
-  desc 'Scan for controller action methods that are missing a route (pass STRICT=1 to account for inherited actions)'
+  desc 'Scan for controller action methods that are missing a route'
   task missing: :environment do
-    analysis = RailsRoutesAnalyzer::RouteAnalysis.new
-    implemented_routes = analysis.implemented_routes
-    all_action_methods = RailsRoutesAnalyzer.get_all_action_methods(ignore_parent_provided: ENV['STRICT'].blank?)
+    report_all = ENV['ALL'].present?
+    analysis = RailsRoutesAnalyzer::ActionAnalysis.new(show_duplicates: ENV['DUPLICATES'].present?,
+                                                       ignore_gems:     ENV['GEMS'].blank?,
+                                                       full_path:       ENV['FULL_PATH'].present?,
+                                                       report_modules:  ENV['MODULES'].present?,
+                                                       metadata:        ENV['METADATA'].present?,
+                                                       report_all: report_all)
 
-    missing = all_action_methods.to_a - implemented_routes.to_a
+    unless report_all
+      if analysis.unused_controllers.present?
+        puts "Controllers with no routes pointing to them:"
+        analysis.unused_controllers.sort_by(&:name).each do |controller|
+          puts "  #{controller.name}"
+        end
+        puts
+      end
 
-    if missing.any?
+      unless analysis.unused_actions_present?
+        puts "There are no actions without a route"
+        exit 0
+      end
+
       puts "NOTE Some gems, such as Devise, are expected to provide actions that have no matching"
       puts "     routes in case a particular feature is not enabled, this is normal and expected."
       puts "NOTE If any non-action methods are reported please consider making those non-public"
       puts "     or using another solution that would make #action_methods not return those."
       puts ""
-
-      unused_controllers = Set.new(all_action_methods.to_a.map(&:first) - implemented_routes.to_a.map(&:first))
-
-      if unused_controllers.any?
-        puts "Controllers with no routes pointing to them:"
-        unused_controllers.to_a.sort.each do |controller_name|
-          puts "  #{controller_name}"
-        end
-        puts ""
-      end
-
       puts "Actions without a route:"
-      missing.sort.each do |(controller_name, action_name)|
-        unless unused_controllers.include?(controller_name)
-          puts "  #{controller_name}::#{action_name}"
-        end
-      end
-    else
-      puts "There are no actions without a route"
+      puts ""
     end
+
+    analysis.report_actions
   end
 
 end

@@ -27,17 +27,22 @@ module RailsRoutesAnalyzer
     identify_route_issues[:implemented_routes]
   end
 
-  def self.get_all_action_methods(ignore_parent_provided: true)
-    [].tap do |result|
-      ApplicationController.descendants.each do |controller_class|
-        action_methods = controller_class.action_methods
+  def self.sanitize_source_location(source_location, full_path: false)
+    unless full_path
+      @replacements ||= Gem.loaded_specs.values.each_with_object({}) do |spec, sum|
+        path = spec.full_gem_path.sub /\/?\z/, '/'
+        sum[path] = "#{spec.name} @ "
+      end
 
-        if ignore_parent_provided && (super_class_actions = controller_class.superclass.try(:action_methods)).present?
-          action_methods -= super_class_actions
-        end
+      @cleanup_regexp ||= /\A#{Regexp.union(@replacements.keys)}/
+    end
 
-        action_methods.each do |action_method|
-          result << [controller_class.name, action_method.to_sym]
+    source_location.dup.tap do |clean_location|
+      unless full_path
+        clean_location.gsub! "#{Rails.root}/", './'
+
+        clean_location.gsub! @cleanup_regexp do |val|
+          @replacements[val] || val
         end
       end
     end
