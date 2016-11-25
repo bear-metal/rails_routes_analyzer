@@ -19,7 +19,10 @@ namespace :routes do
 
   desc "Output a routes file with suggested modifications in comments (NOTE: doesn't touch the original file)"
   task annotate_dead: :environment do
-    annotator = RailsRoutesAnalyzer::RouteFileAnnotator.new
+    annotator = RailsRoutesAnalyzer::RouteFileAnnotator.new(
+                  try_to_fix:     ENV['ROUTES_TRY_TO_FIX'] == 'experimental',
+                  allow_deleting: ENV['ROUTES_ALLOW_DELETING'].present?,
+                )
     annotator.annotate_routes_file(ENV['ROUTES_ANNOTATE'])
   end
 

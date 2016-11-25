@@ -1,8 +1,10 @@
 module RailsRoutesAnalyzer
 
   class RouteFileAnnotator
-    def initialize(analysis: RailsRoutesAnalyzer::RouteAnalysis.new)
+    def initialize(analysis: RailsRoutesAnalyzer::RouteAnalysis.new, try_to_fix: false, allow_deleting: false)
       @analysis = analysis
+      @try_to_fix = try_to_fix
+      @allow_deleting = allow_deleting
     end
 
     def annotated_file_content(route_filename)
@@ -19,14 +21,34 @@ module RailsRoutesAnalyzer
 
       "".tap do |output|
         File.readlines(route_filename).each_with_index do |line, index|
-          suggestion = combined_suggestion_for(issue_map[index + 1])
+          issues = issue_map[index + 1]
 
-          if suggestion.present?
-            output << line.sub(/( # SUGGESTION.*)?$/, " # SUGGESTION #{suggestion}")
+          if @try_to_fix
+            output << try_to_fix_line(line, issues)
           else
-            output << line
+            output << add_suggestions_to(line, issues)
           end
         end
+      end
+    end
+
+    def try_to_fix_line(line, issues)
+      has_one_issue = issues.size == 1 && issues[0].issue?
+
+      if has_one_issue && (fixed_line = issues[0].try_to_fix_line(line)) && (@allow_deleting || fixed_line != '')
+        fixed_line
+      else
+        add_suggestions_to(line, issues)
+      end
+    end
+
+    def add_suggestions_to(line, issues)
+      suggestions = combined_suggestion_for(issues)
+
+      if suggestions.present?
+        line.sub(/( # SUGGESTION.*)?$/, " # SUGGESTION #{suggestions}")
+      else
+        line
       end
     end
 
