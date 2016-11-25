@@ -54,7 +54,7 @@ module RailsRoutesAnalyzer
 
       if filename.blank?
         if filenames.size > 1
-          STDERR.puts "Please specify file to annotate with ANNOTATE='path/routes.rb' as you have more than one:\n#{filenames.join("\n  ")}"
+          STDERR.puts "Please specify file to annotate with ROUTES_ANNOTATE='path/routes.rb' as you have more than one:\n#{filenames.join("\n  ")}"
           exit 1
         end
         filename = filenames.first

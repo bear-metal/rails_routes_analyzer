@@ -27,7 +27,7 @@ For multi-route calls like `resource' and `resources' it can also let you know i
 For complex cases where for example a routes are created in a loop for multiple controllers a suggestion will be provided for each iteration but only if that specific iteration created a dead route. Every such suggestion will identify the exact controller to which it applies.
 
 ``` sh
-rake routes:annotate_dead [ANNOTATE=path/to/routes.rb]
+rake routes:annotate_dead [ROUTES_ANNOTATE=path/to/routes.rb]
 
 # Best used like this:
 rake routes:annotate_dead > config/routest.rb.new
@@ -35,7 +35,7 @@ mv config/routes.rb.new config/routes.rb
 # And then update the file as requested in any SUGGESTION comments
 ```
 
-Will output an annotated version of config/routes.rb or any other routes file as provided in the ANNOTATE parameter.
+Will output an annotated version of config/routes.rb or any other routes file as provided in the ROUTES_ANNOTATE parameter.
 
 
 #### Additional options:
