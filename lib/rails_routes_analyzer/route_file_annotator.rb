@@ -63,7 +63,7 @@ module RailsRoutesAnalyzer
       filename = RailsRoutesAnalyzer.get_full_filename(filename)
 
       unless File.exists?(filename)
-        STDERR.puts "Can't routes find file: #{filename}"
+        STDERR.puts "Can't find routes file: #{filename}"
         exit 1
       end
 
