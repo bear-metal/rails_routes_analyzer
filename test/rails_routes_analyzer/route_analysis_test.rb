@@ -77,45 +77,41 @@ module RailsRoutesAnalyzer
 
       issues = analysis.issues.index_by(&:file_location)
 
-      assert_equal RouteIssue.new(
+      assert_equal ResourcesRouteIssue.new(
         file_location: "routes_bad.rb:4",
         route_creation_method: "resources",
         controller_name: "home",
         controller_class_name: "HomeController",
         action_names: [:create, :destroy, :edit, :index, :new, :show, :update],
-        type: :resources,
         suggested_param: "only: [:index, :show]",
         verbose_message: nil,
       ), issues["routes_bad.rb:4"]
 
-      assert_equal RouteIssue.new(
+      assert_equal NoActionRouteIssue.new(
         file_location: "routes_bad.rb:7",
         route_creation_method: "get",
         controller_name: "full_items",
         controller_class_name: "FullItemsController",
         action_names: [:missing_member_action],
-        type: :no_action,
         missing_actions: [:missing_member_action],
       ), issues["routes_bad.rb:7"]
 
-      assert_equal RouteIssue.new(
+      assert_equal NoActionRouteIssue.new(
         file_location: "routes_bad.rb:10",
         route_creation_method: "post",
         controller_name: "full_items",
         controller_class_name: "FullItemsController",
         action_names: [:missing_collection_action],
-        type: :no_action,
         missing_actions: [:missing_collection_action],
       ), issues["routes_bad.rb:10"]
 
-      assert_equal RouteIssue.new(
+      assert_equal NoControllerRouteIssue.new(
         file_location: "routes_bad.rb:15",
         route_creation_method: "get",
         controller_name: "unknown_controller",
         controller_class_name: "UnknownControllerController",
         action_names: [:index],
         error: "uninitialized constant UnknownControllerController",
-        type: :no_controller,
       ), issues["routes_bad.rb:15"]
     end
 
@@ -174,25 +170,23 @@ module RailsRoutesAnalyzer
 
       issues_for_3 = issues["routes_bad_loops.rb:3"]
       assert_equal 1, issues_for_3.size
-      assert_equal RouteIssue.new(
+      assert_equal NoControllerRouteIssue.new(
         file_location: "routes_bad_loops.rb:3",
 	route_creation_method: "resource",
 	controller_name: "somethings",
 	controller_class_name: "SomethingsController",
 	action_names: [:destroy],
 	error: "uninitialized constant SomethingsController",
-	type: :no_controller,
       ), issues_for_3[0]
 
       issues_for_7 = issues["routes_bad_loops.rb:7"]
 
-      assert_equal RouteIssue.new(
+      assert_equal NoActionRouteIssue.new(
         file_location: "routes_bad_loops.rb:7",
         route_creation_method: "get",
         controller_name: "home",
         controller_class_name: "HomeController",
         action_names: [:index, :other_action, :unknown_action],
-        type: :no_action,
         missing_actions: [:other_action, :unknown_action],
       ), issues_for_7[0]
     end

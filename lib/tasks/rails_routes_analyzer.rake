@@ -13,7 +13,7 @@ namespace :routes do
     end
 
     analysis.issues.each do |issue|
-      puts issue.human_readable
+      puts issue.human_readable_full
     end
   end
 

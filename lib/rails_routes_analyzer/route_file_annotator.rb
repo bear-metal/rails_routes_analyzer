@@ -33,7 +33,7 @@ module RailsRoutesAnalyzer
     end
 
     def try_to_fix_line(line, issues)
-      has_one_issue = issues.size == 1 && issues[0].issue?
+      has_one_issue = issues && issues.size == 1 && issues[0].issue?
 
       if has_one_issue && (fixed_line = issues[0].try_to_fix_line(line)) && (@allow_deleting || fixed_line != '')
         fixed_line

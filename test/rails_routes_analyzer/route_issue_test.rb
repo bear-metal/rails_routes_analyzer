@@ -19,24 +19,24 @@ module RailsRoutesAnalyzer
 
     def test_resources_action_limit_suggestion
       issue = get_issue_at 'routes_bad.rb:4'
-      assert_equal "`resources' call at routes_bad.rb:4 for HomeController should use only: [:index, :show]", issue.human_readable
+      assert_equal "`resources' call at routes_bad.rb:4 for HomeController should use only: [:index, :show]", issue.human_readable_error
       assert_equal 4, issue.line_number
       assert_equal File.expand_path('../../dummy/routes_bad.rb', __FILE__), issue.full_filename
     end
 
     def test_custom_member_route_without_action_method
       issue = get_issue_at 'routes_bad.rb:7'
-      assert_equal "`get :missing_member_action' call at routes_bad.rb:7 there is no matching action in FullItemsController", issue.human_readable
+      assert_equal "`get :missing_member_action' call at routes_bad.rb:7 there is no matching action in FullItemsController", issue.human_readable_error
     end
 
     def test_custom_collection_route_without_action_method
       issue = get_issue_at 'routes_bad.rb:10'
-      assert_equal "`post :missing_collection_action' call at routes_bad.rb:10 there is no matching action in FullItemsController", issue.human_readable
+      assert_equal "`post :missing_collection_action' call at routes_bad.rb:10 there is no matching action in FullItemsController", issue.human_readable_error
     end
 
     def test_unknown_controller
       issue = get_issue_at 'routes_bad.rb:15'
-      assert_equal "`get' call at routes_bad.rb:15 there is no controller: UnknownControllerController for 'unknown_controller' (actions: [:index]) error: uninitialized constant UnknownControllerController", issue.human_readable
+      assert_equal "`get' call at routes_bad.rb:15 there is no controller: UnknownControllerController for 'unknown_controller' (actions: [:index]) error: uninitialized constant UnknownControllerController", issue.human_readable_error
     end
 
     def test_try_to_fix_resources_line
@@ -133,7 +133,7 @@ module RailsRoutesAnalyzer
     end
 
     def assert_replacement(result, original)
-      actual = RouteIssue.try_to_fix_resources_line("#{original}\n", "only: [:asd]")
+      actual = ResourcesRouteIssue.try_to_fix_resources_line("#{original}\n", "only: [:asd]")
       if result
         assert_equal "#{result}\n", actual
       else

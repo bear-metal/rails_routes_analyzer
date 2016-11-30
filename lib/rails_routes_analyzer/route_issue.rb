@@ -1,33 +1,25 @@
 module RailsRoutesAnalyzer
 
-  class RouteIssue < Hash
-    %i[
-      action
-      action_names
-      missing_actions
-      present_actions
-      controller_class_name
-      controller_name
-      error
-      file_location
-      route_creation_method
-      suggested_param
-      type
-      verbose_message
-    ].each do |name|
-      define_method(name) { self[name] }
+  class RouteRecord < Hash
+    def self.fields(*names)
+      names.each { |name| define_method(name) { self[name] } }
     end
+
+    fields \
+      :action,
+      :action_names,
+      :controller_class_name,
+      :controller_name,
+      :file_location,
+      :route_creation_method,
+      :present_actions
 
     def initialize(opts={})
       self.update(opts)
     end
 
     def issue?
-      type != :non_issue
-    end
-
-    def resource?
-      type == :resources
+      false
     end
 
     def full_filename
@@ -37,61 +29,78 @@ module RailsRoutesAnalyzer
     def line_number
       file_location[/:([0-9]+)\z/, 1].to_i
     end
+  end
 
-    def human_readable
-      case self[:type]
-      when :non_issue
-        ''
-      when :no_controller
-        "`#{route_creation_method}' call at #{file_location} there is no controller: #{controller_class_name} for '#{controller_name}' (actions: #{action_names.inspect})".tap do |msg|
-          msg << " error: #{error}" if error.present?
-        end
-      when :no_action
-        missing_actions.map do |action|
-          "`#{route_creation_method} :#{action}' call at #{file_location} there is no matching action in #{controller_class_name}"
-        end.tap do |result|
-          return nil if result.size == 0
-          return result[0] if result.size == 1
-        end
-      when :resources
-        "`#{route_creation_method}' call at #{file_location} for #{controller_class_name} should use #{suggested_param}"
-      else
-        raise ArgumentError, "Unknown issue_type: #{self[:type].inspect}"
-      end.tap do |message|
+  class RouteIssue < RouteRecord
+    fields \
+      :error,
+      :verbose_message,
+      :missing_actions
+
+    def issue?
+      true
+    end
+
+    def human_readable_error
+      human_readable_error_message.tap do |message|
         message << "| #{verbose_message}" if verbose_message
       end
     end
 
-    def suggestion(non_issues:, num_controllers:)
-      case self[:type]
-      when :non_issue
-        nil
-      when :no_controller
-        if non_issues
-          "remove case for #{controller_class_name} as it doesn't exist"
-        else
-          "delete, #{controller_class_name} not found"
-        end
-      when :no_action
-        actions = format_actions(missing_actions)
-        if non_issues
-          "remove case#{'s' if missing_actions.size > 1} for #{actions}"
-        else
-          "delete line, #{actions} matches nothing"
-        end.tap do |message|
-          message << " for controller #{controller_class_name}" if num_controllers > 1
-        end
-      when :resources
-        "use #{suggested_param}".tap do |message|
-          if num_controllers > 1
-            message << " only for #{controller_class_name}"
-          end
-        end
-      else
-        raise ArgumentError, "Unknown issue_type: #{self[:type].inspect}"
-      end.tap do |message|
+    def suggestion(**kwargs)
+      error_suggestion(**kwargs).tap do |message|
         message << "| #{verbose_message}" if verbose_message
       end
+    end
+
+    def try_to_fix_line(line)
+      raise NotImplementedError, 'should be provided by subclasses'
+    end
+  end
+
+  class NoControllerRouteIssue < RouteIssue
+    def human_readable_error_message
+      "`#{route_creation_method}' call at #{file_location} there is no controller: #{controller_class_name} for '#{controller_name}' (actions: #{action_names.inspect})".tap do |msg|
+        msg << " error: #{error}" if error.present?
+      end
+    end
+
+    def error_suggestion(non_issues:, num_controllers:)
+      if non_issues
+        "remove case for #{controller_class_name} as it doesn't exist"
+      else
+        "delete, #{controller_class_name} not found"
+      end
+    end
+
+    def try_to_fix_line(line)
+      '' # Delete
+    end
+  end
+
+  class NoActionRouteIssue < RouteIssue
+    def human_readable_error_message
+      missing_actions.map do |action|
+        "`#{route_creation_method} :#{action}' call at #{file_location} there is no matching action in #{controller_class_name}"
+      end.tap do |result|
+        return nil if result.size == 0
+        return result[0] if result.size == 1
+      end
+    end
+
+    def error_suggestion(non_issues:, num_controllers:)
+      actions = format_actions(missing_actions)
+      if non_issues
+        "remove case#{'s' if missing_actions.size > 1} for #{actions}"
+      else
+        "delete line, #{actions} matches nothing"
+      end.tap do |message|
+        message << " for controller #{controller_class_name}" if num_controllers > 1
+      end
+    end
+
+    def try_to_fix_line(line)
+      '' # Delete
     end
 
     def format_actions(actions)
@@ -104,34 +113,25 @@ module RailsRoutesAnalyzer
         "[#{list}]"
       end
     end
+  end
 
-    # Returns the routes line with the fix suggested in this RouteIssue but only if the fix
-    # is successfully applied. Line deleting fixes result in a blank string (with no line break)
-    def try_to_fix_line(line)
-      case self[:type]
-      when :non_issue
-        line
-      when :no_controller
-        if non_issues
-          nil # Unable to fix complex cases
-        else
-          '' # Delete
+  class ResourcesRouteIssue < RouteIssue
+    fields :suggested_param
+
+    def human_readable_error_message
+      "`#{route_creation_method}' call at #{file_location} for #{controller_class_name} should use #{suggested_param}"
+    end
+
+    def error_suggestion(non_issues:, num_controllers:)
+      "use #{suggested_param}".tap do |message|
+        if num_controllers > 1
+          message << " only for #{controller_class_name}"
         end
-      when :no_action
-        if non_issues
-          nil # Unable to fix complex cases
-        else
-          '' # Delete
-        end
-      when :resources
-        if num_controllers == 1
-          self.class.try_to_fix_resources_line(line, suggested_param)
-        else
-          nil # Can't fix resource(s) calls covering multiple controllers in a loop
-        end
-      else
-        raise ArgumentError, "Unknown issue_type: #{self[:type].inspect}"
       end
+    end
+
+    def try_to_fix_line(line)
+      try_to_fix_resources_line(line, suggested_param)
     end
 
     # This is horrible but just maybe works well enough most of the time to be useful.
@@ -189,6 +189,10 @@ module RailsRoutesAnalyzer
         false
       )
     %x
+
+    def try_to_fix_line(line, suggestion: suggested_param)
+      self.class.try_to_fix_resources_line(line, suggestion)
+    end
 
     def self.try_to_fix_resources_line(line, suggestion)
       data = line.match(RESOURCES_PARSE_REGEX)

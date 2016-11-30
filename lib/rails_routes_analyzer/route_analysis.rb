@@ -52,14 +52,14 @@ module RailsRoutesAnalyzer
       begin
         controller = Object.const_get(controller_class_name)
       rescue LoadError, RuntimeError, NameError => e
-        return RouteIssue.new(opts.merge(type: :no_controller, error: e.message))
+        return NoControllerRouteIssue.new(opts.merge(error: e.message))
       end
 
       if controller.nil?
-        return RouteIssue.new(opts.merge(type: :no_controller))
+        return NoControllerRouteIssue.new(opts)
       end
 
-      return analyze_action_availability(controller, **opts)
+      return analyze_action_availability(controller, **opts.merge(controller_class_name: controller.name))
     end
 
     # Checks which if any actions referred to by the route don't exist.
@@ -68,13 +68,13 @@ module RailsRoutesAnalyzer
         present, missing = opts[:action_names].partition {|name| controller.action_methods.include?(name.to_s) }
 
         if present.any?
-          result << RouteIssue.new(opts.merge(type: :non_issue, present_actions: present))
+          result << RouteRecord.new(opts.merge(present_actions: present))
         end
 
         if SINGLE_METHODS.include?(opts[:route_creation_method])
           # NOTE a single call like 'get' can add multiple actions if called in a loop
           if missing.present?
-            result << RouteIssue.new(opts.merge(type: :no_action, missing_actions: missing))
+            result << NoActionRouteIssue.new(opts.merge(missing_actions: missing))
           end
 
           return result
@@ -95,7 +95,7 @@ module RailsRoutesAnalyzer
           verbose_message = "This route currently covers unimplemented actions: [#{missing.sort.map {|x| ":#{x}" }.join(', ')}]"
         end
 
-        result << RouteIssue.new(opts.merge(type: :resources, suggested_param: suggested_param, verbose_message: verbose_message))
+        result << ResourcesRouteIssue.new(opts.merge(suggested_param: suggested_param, verbose_message: verbose_message))
       end
     end
 
