@@ -1,3 +1,8 @@
+require_relative 'route_record'
+require_relative 'no_action_route_issue'
+require_relative 'no_controller_route_issue'
+require_relative 'resources_route_issue'
+
 module RailsRoutesAnalyzer
 
   class RouteAnalysis
