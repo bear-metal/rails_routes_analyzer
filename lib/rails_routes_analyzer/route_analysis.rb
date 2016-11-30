@@ -14,7 +14,7 @@ module RailsRoutesAnalyzer
       analyze!
     end
 
-    def analyze!
+    def prepare_for_analysis
       app.eager_load! # all controller classes need to be loaded
 
       ::ActionDispatch::Routing::Mapper::Mapping.prepend RouteInterceptor
@@ -22,75 +22,89 @@ module RailsRoutesAnalyzer
       RouteInterceptor.route_log.clear
 
       app.reload_routes!
+    end
+
+    def analyze!
+      prepare_for_analysis
 
       all_issues = []
 
       RouteInterceptor.route_data.each do |(file_location, route_creation_method, controller_name), action_names|
-        controller_class_name = "#{controller_name}_controller".camelize
-
-        action_names = action_names.uniq.sort
-
-        opts = {
+        result = analyse_route_call(
           file_location:         file_location,
           route_creation_method: route_creation_method,
           controller_name:       controller_name,
-          controller_class_name: controller_class_name,
-          action_names:          action_names,
-        }
+          action_names:          action_names.uniq.sort,
+        )
+        all_issues.concat Array.wrap(result)
+      end
 
-        controller = nil
-        begin
-          controller = Object.const_get(controller_class_name)
-        rescue LoadError, RuntimeError, NameError => e
-          all_issues << RouteIssue.new(opts.merge(type: :no_controller, error: e.message))
-          next
-        end
+      self.route_log = RouteInterceptor.route_log.dup
+      self.all_issues = all_issues
+    end
 
-        if controller.nil?
-          all_issues << RouteIssue.new(opts.merge(type: :no_controller))
-          next
-        end
+    def analyse_route_call(**kwargs)
+      controller_class_name = "#{kwargs[:controller_name]}_controller".camelize
 
-        present, missing = action_names.partition {|name| controller.action_methods.include?(name.to_s) }
-        extra = action_names - RESOURCE_ACTIONS
+      opts = kwargs.merge(controller_class_name: controller_class_name)
+
+      controller = nil
+      begin
+        controller = Object.const_get(controller_class_name)
+      rescue LoadError, RuntimeError, NameError => e
+        return RouteIssue.new(opts.merge(type: :no_controller, error: e.message))
+      end
+
+      if controller.nil?
+        return RouteIssue.new(opts.merge(type: :no_controller))
+      end
+
+      return analyze_action_availability(controller, **opts)
+    end
+
+    # Checks which if any actions referred to by the route don't exist.
+    def analyze_action_availability(controller, **opts)
+      [].tap do |result|
+        present, missing = opts[:action_names].partition {|name| controller.action_methods.include?(name.to_s) }
 
         if present.any?
-          all_issues << RouteIssue.new(opts.merge(type: :non_issue, present_actions: present))
+          result << RouteIssue.new(opts.merge(type: :non_issue, present_actions: present))
         end
 
-        if SINGLE_METHODS.include?(route_creation_method)
+        if SINGLE_METHODS.include?(opts[:route_creation_method])
           # NOTE a single call like 'get' can add multiple actions if called in a loop
           if missing.present?
-            all_issues << RouteIssue.new(opts.merge(type: :no_action, missing_actions: missing))
+            result << RouteIssue.new(opts.merge(type: :no_action, missing_actions: missing))
           end
 
-          next
+          return result
         end
 
-        next if missing.empty? # Everything is perfect
+        return result if missing.empty? # Everything is perfect
 
         if present.sort == RESOURCE_ACTIONS.sort
           unless missing.empty?
             raise "shouldn't get all methods being present and missing at the same time: #{present.inspect} #{missing.inspect}"
           end
-          next
+          return result
         end
 
-        suggested_param = if (present.size < 4 || only_only) && !only_except
-          "only: [#{present.sort.map {|x| ":#{x}" }.join(', ')}]"
-        else
-          "except: [#{(RESOURCE_ACTIONS - present).sort.map {|x| ":#{x}" }.join(', ')}]"
-        end
+        suggested_param = resource_route_suggested_param(present)
 
         if verbose
           verbose_message = "This route currently covers unimplemented actions: [#{missing.sort.map {|x| ":#{x}" }.join(', ')}]"
         end
 
-        all_issues << RouteIssue.new(opts.merge(type: :resources, suggested_param: suggested_param, verbose_message: verbose_message))
+        result << RouteIssue.new(opts.merge(type: :resources, suggested_param: suggested_param, verbose_message: verbose_message))
       end
+    end
 
-      self.route_log = RouteInterceptor.route_log.dup
-      self.all_issues = all_issues
+    def resource_route_suggested_param(present)
+      suggested_param = if (present.size < 4 || only_only) && !only_except
+        "only: [#{present.sort.map {|x| ":#{x}" }.join(', ')}]"
+      else
+        "except: [#{(RESOURCE_ACTIONS - present).sort.map {|x| ":#{x}" }.join(', ')}]"
+      end
     end
 
     def all_issues
