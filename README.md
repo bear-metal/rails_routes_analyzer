@@ -44,6 +44,9 @@ Will output an annotated version of config/routes.rb or any other routes file as
 ONLY_ONLY=1      # suggestions for resource routes will only generate "only:" regardless of how many elements are listed.
 ONLY_EXCEPT=1    # suggestions for resource routes will only generate "except:" regardless of how many elements are listed.
 ROUTES_VERBOSE=1 # more verbosity, currently this means listing which non-existing actions a given call provides routes for.
+
+ROUTES_TRY_TO_FIX=experimental # Allows fixing certain lines instead of adding a comment
+ROUTES_ALLOW_DELETING=1        # Allows deleting a line also when ROUTES_TRY_TO_FIX is enabled
 ```
 
 ```sh
