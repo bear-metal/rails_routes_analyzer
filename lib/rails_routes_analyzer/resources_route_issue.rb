@@ -21,6 +21,10 @@ module RailsRoutesAnalyzer
       try_to_fix_resources_line(line, suggested_param)
     end
 
+    def get_verbose_message
+      "This route currently covers unimplemented actions: #{format_actions(missing_actions.sort)}"
+    end
+
     # This is horrible but just maybe works well enough most of the time to be useful.
     RESOURCES_PARSE_REGEX = %r%
       \A

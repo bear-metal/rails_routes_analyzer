@@ -26,17 +26,6 @@ module RailsRoutesAnalyzer
     def try_to_fix_line(line)
       '' # Delete
     end
-
-    def format_actions(actions)
-      case actions.size
-      when 0
-      when 1
-        ":#{actions.first}"
-      else
-        list = actions.map { |action| ":#{action}" }.sort.join(', ')
-        "[#{list}]"
-      end
-    end
   end
 
 end

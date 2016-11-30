@@ -3,7 +3,6 @@ namespace :routes do
   desc 'Scan for dead-end routes including bad map.resource(s) :only/:except parameters'
   task dead: :environment do
     analysis = RailsRoutesAnalyzer::RouteAnalysis.new(
-                 verbose:     !ENV['ROUTES_VERBOSE'].nil?,
                  only_only:   !ENV['ONLY_ONLY'].nil?,
                  only_except: !ENV['ONLY_EXCEPT'].nil?)
 
@@ -12,8 +11,10 @@ namespace :routes do
       exit 0
     end
 
+    verbose = !ENV['ROUTES_VERBOSE'].nil?
+
     analysis.issues.each do |issue|
-      puts issue.human_readable_full
+      puts issue.human_readable_error(verbose: verbose)
     end
   end
 

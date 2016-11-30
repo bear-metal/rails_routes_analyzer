@@ -8,47 +8,28 @@ module RailsRoutesAnalyzer
     end
 
     def annotated_file_content(route_filename)
-      relevant_issues = @analysis.all_issues_for_file_name(route_filename)
+      route_lines = @analysis.route_lines_for_file(route_filename)
 
-      if relevant_issues.none?(&:issue?)
-        log_notice { "Didn't find any route issues for file: #{route_filename}, only have references to: #{@analysis.all_unique_issues_file_names.join(', ')}" }
+      if route_lines.none?(&:issues?)
+        log_notice { "Didn't find any route issues for file: #{route_filename}, only found issues in files: #{@analysis.all_unique_issues_file_names.join(', ')}" }
       end
 
       log_notice { "Annotating #{route_filename}" }
 
-      lines = File.readlines(route_filename)
-      issue_map = relevant_issues.group_by { |issue| issue.line_number }
+      route_lines_map = route_lines.index_by(&:line_number)
 
       "".tap do |output|
         File.readlines(route_filename).each_with_index do |line, index|
-          issues = issue_map[index + 1]
+          route_line = route_lines_map[index + 1]
 
-          if @try_to_fix
-            output << try_to_fix_line(line, issues)
+          if route_line
+            output << route_line.annotate(line,
+                                          try_to_fix:     @try_to_fix,
+                                          allow_deleting: @allow_deleting)
           else
-            output << add_suggestions_to(line, issues)
+            output << line
           end
         end
-      end
-    end
-
-    def try_to_fix_line(line, issues)
-      has_one_issue = issues && issues.size == 1 && issues[0].issue?
-
-      if has_one_issue && (fixed_line = issues[0].try_to_fix_line(line)) && (@allow_deleting || fixed_line != '')
-        fixed_line
-      else
-        add_suggestions_to(line, issues)
-      end
-    end
-
-    def add_suggestions_to(line, issues)
-      suggestions = combined_suggestion_for(issues)
-
-      if suggestions.present?
-        line.sub(/( # SUGGESTION.*)?$/, " # SUGGESTION #{suggestions}")
-      else
-        line
       end
     end
 
@@ -58,21 +39,20 @@ module RailsRoutesAnalyzer
       STDERR.puts "# #{message}" if message.present?
     end
 
-    def combined_suggestion_for(all_issues)
-      return if all_issues.nil? || all_issues.none?(&:issue?)
+    def annotate_routes_file(filename)
+      filename = automatic_filename_for_annotation if filename.blank?
+      filename = RailsRoutesAnalyzer.get_full_filename(filename)
 
-      issues, non_issues = all_issues.partition(&:issue?)
+      unless File.exist?(filename)
+        STDERR.puts "Can't find routes file: #{filename}"
+        exit 1
+      end
 
-      context = {
-        non_issues: non_issues.present?,
-        num_controllers: all_issues.map(&:controller_class_name).uniq.count,
-      }
-
-      issues.map { |issue| issue.suggestion(**context) }.join(', ')
+      puts annotated_file_content(filename)
     end
 
-    def annotate_routes_file(filename)
-      filenames = @analysis.unique_issues_file_names
+    def automatic_filename_for_annotation
+      filenames = @analysis.all_unique_issues_file_names
 
       if filename.blank?
         if filenames.size == 0
@@ -84,15 +64,6 @@ module RailsRoutesAnalyzer
         end
         filename = filenames.first
       end
-
-      filename = RailsRoutesAnalyzer.get_full_filename(filename)
-
-      unless File.exist?(filename)
-        STDERR.puts "Can't find routes file: #{filename}"
-        exit 1
-      end
-
-      puts annotated_file_content(filename)
     end
   end
 

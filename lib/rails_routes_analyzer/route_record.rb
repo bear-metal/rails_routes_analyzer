@@ -27,11 +27,11 @@ module RailsRoutesAnalyzer
     end
 
     def full_filename
-      RailsRoutesAnalyzer.get_full_filename(file_location.sub(/:[0-9]*\z/, ''))
+      @full_filename ||= RailsRoutesAnalyzer.get_full_filename(file_location.sub(/:[0-9]*\z/, ''))
     end
 
     def line_number
-      file_location[/:([0-9]+)\z/, 1].to_i
+      @line_number ||= file_location[/:([0-9]+)\z/, 1].to_i
     end
   end
 

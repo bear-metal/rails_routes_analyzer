@@ -9,7 +9,7 @@ module RailsRoutesAnalyzer
       end
     end
 
-    def error_suggestion(non_issues:, num_controllers:)
+    def error_suggestion(non_issues:, **kwargs)
       if non_issues
         "remove case for #{controller_class_name} as it doesn't exist"
       else
