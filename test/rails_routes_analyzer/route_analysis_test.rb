@@ -77,7 +77,7 @@ module RailsRoutesAnalyzer
 
       issues = analysis.issues.index_by(&:file_location)
 
-      assert_equal ResourcesRouteIssue.new(
+      assert_equal RouteIssue::Resources.new(
         file_location: "routes_bad.rb:4",
         route_creation_method: "resources",
         controller_name: "home",
@@ -87,7 +87,7 @@ module RailsRoutesAnalyzer
         verbose_message: nil,
       ), issues["routes_bad.rb:4"]
 
-      assert_equal NoActionRouteIssue.new(
+      assert_equal RouteIssue::NoAction.new(
         file_location: "routes_bad.rb:7",
         route_creation_method: "get",
         controller_name: "full_items",
@@ -96,7 +96,7 @@ module RailsRoutesAnalyzer
         missing_actions: [:missing_member_action],
       ), issues["routes_bad.rb:7"]
 
-      assert_equal NoActionRouteIssue.new(
+      assert_equal RouteIssue::NoAction.new(
         file_location: "routes_bad.rb:10",
         route_creation_method: "post",
         controller_name: "full_items",
@@ -105,7 +105,7 @@ module RailsRoutesAnalyzer
         missing_actions: [:missing_collection_action],
       ), issues["routes_bad.rb:10"]
 
-      assert_equal NoControllerRouteIssue.new(
+      assert_equal RouteIssue::NoController.new(
         file_location: "routes_bad.rb:15",
         route_creation_method: "get",
         controller_name: "unknown_controller",
@@ -172,7 +172,7 @@ module RailsRoutesAnalyzer
 
       issues_for_3 = issues["routes_bad_loops.rb:3"]
       assert_equal 1, issues_for_3.size
-      assert_equal NoControllerRouteIssue.new(
+      assert_equal RouteIssue::NoController.new(
         file_location: "routes_bad_loops.rb:3",
 	route_creation_method: "resource",
 	controller_name: "somethings",
@@ -183,7 +183,7 @@ module RailsRoutesAnalyzer
 
       issues_for_7 = issues["routes_bad_loops.rb:7"]
 
-      assert_equal NoActionRouteIssue.new(
+      assert_equal RouteIssue::NoAction.new(
         file_location: "routes_bad_loops.rb:7",
         route_creation_method: "get",
         controller_name: "home",

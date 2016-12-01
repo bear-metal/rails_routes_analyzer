@@ -1,8 +1,6 @@
 require_relative 'route_line'
 require_relative 'route_call'
-require_relative 'no_action_route_issue'
-require_relative 'no_controller_route_issue'
-require_relative 'resources_route_issue'
+require_relative 'route_issue'
 
 module RailsRoutesAnalyzer
 
@@ -71,12 +69,12 @@ module RailsRoutesAnalyzer
       begin
         controller = Object.const_get(controller_class_name)
       rescue LoadError, RuntimeError, NameError => e
-        route_calls << NoControllerRouteIssue.new(opts.merge(error: e.message))
+        route_calls << RouteIssue::NoController.new(opts.merge(error: e.message))
         return
       end
 
       if controller.nil?
-        route_calls << NoControllerRouteIssue.new(opts)
+        route_calls << RouteIssue::NoController.new(opts)
         return
       end
 
@@ -94,7 +92,7 @@ module RailsRoutesAnalyzer
       if SINGLE_METHODS.include?(opts[:route_creation_method])
         # NOTE a single call like 'get' can add multiple actions if called in a loop
         if missing.present?
-          route_calls << NoActionRouteIssue.new(opts.merge(missing_actions: missing))
+          route_calls << RouteIssue::NoAction.new(opts.merge(missing_actions: missing))
         end
         return
       end
@@ -112,7 +110,7 @@ module RailsRoutesAnalyzer
         verbose_message = "This route currently covers unimplemented actions: [#{missing.sort.map {|x| ":#{x}" }.join(', ')}]"
       end
 
-      route_calls << ResourcesRouteIssue.new(opts.merge(suggested_param: suggested_param, verbose_message: verbose_message))
+      route_calls << RouteIssue::Resources.new(opts.merge(suggested_param: suggested_param, verbose_message: verbose_message))
     end
 
     def resource_route_suggested_param(present)
