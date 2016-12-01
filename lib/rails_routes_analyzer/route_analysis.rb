@@ -1,8 +1,11 @@
 require_relative 'route_line'
 require_relative 'route_call'
 require_relative 'route_issue'
+require_relative 'route_interceptor'
 
 module RailsRoutesAnalyzer
+
+  RESOURCE_ACTIONS = [:index, :create, :new, :show, :update, :destroy, :edit]
 
   class RouteAnalysis
     attr_accessor :app, :verbose, :only_only, :only_except

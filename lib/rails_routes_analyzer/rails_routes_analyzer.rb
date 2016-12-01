@@ -9,16 +9,6 @@ module RailsRoutesAnalyzer
     Rails.root.join(filename).to_s
   end
 
-  RESOURCE_ACTIONS = [:index, :create, :new, :show, :update, :destroy, :edit]
-
-  def self.identify_route_issues
-    RouteAnalysis.new
-  end
-
-  def self.get_all_defined_routes
-    identify_route_issues[:implemented_routes]
-  end
-
   def self.sanitize_source_location(source_location, full_path: false)
     unless full_path
       @replacements ||= Gem.loaded_specs.values.each_with_object({}) do |spec, sum|
