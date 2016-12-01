@@ -43,13 +43,13 @@ module RailsRoutesAnalyzer
       end
     end
 
-    if Rails.version =~ /\A3[.]/
+    if Rails::VERSION::MAJOR == 3
       def initialize(*args)
         super.tap do
           record_route(@options[:controller], @options[:action], conditions[:request_method])
         end
       end
-    elsif Rails.version =~ /\A4\./
+    elsif Rails::VERSION::MAJOR == 4
       def initialize(*args)
         super.tap do
           record_route(@defaults[:controller], @defaults[:action], conditions[:request_method])
