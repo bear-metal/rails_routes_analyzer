@@ -16,8 +16,8 @@ module RailsRoutesAnalyzer
       @file_location ||= "#{full_filename}:#{line_number}"
     end
 
-    def non_issues
-      @non_issues ||= records.reject(&:issue?)
+    def has_present_actions?
+      records.any?(&:has_present_actions?)
     end
 
     def issues
@@ -40,10 +40,9 @@ module RailsRoutesAnalyzer
     # apply to lines with multiple issues (iterations) as those
     # will most likely require changes to the surrounding code.
     def try_to_fix_line(line, allow_deleting:)
-      has_one_issue     = issues.size == 1
-      has_no_non_issues = non_issues.empty?
+      has_one_issue = issues.size == 1
 
-      if has_one_issue && has_no_non_issues
+      if has_one_issue && !has_present_actions?
         fix = issues[0].try_to_fix_line(line)
         return fix if fix.present? || (fix == '' && allow_deleting)
       end
@@ -64,11 +63,11 @@ module RailsRoutesAnalyzer
       return unless issues?
 
       context = {
-        non_issues:      non_issues.present?,
-        num_controllers: all_controller_class_names.count,
+        has_present_actions: has_present_actions?,
+        num_controllers:     all_controller_class_names.count,
       }
 
-      issues.map { |issue| issue.suggestion(**context) }.join(', ')
+      issues.map { |issue| issue.suggestion(**context) }.flatten.join(', ')
     end
 
   end

@@ -4,13 +4,14 @@ module RailsRoutesAnalyzer
   module RouteIssue
 
     class Resources < Base
+
       fields :suggested_param
 
       def human_readable_error_message
         "`#{route_creation_method}' call at #{file_location} for #{controller_class_name} should use #{suggested_param}"
       end
 
-      def error_suggestion(non_issues:, num_controllers:)
+      def error_suggestion(num_controllers:, **kwargs)
         "use #{suggested_param}".tap do |message|
           if num_controllers > 1
             message << " only for #{controller_class_name}"

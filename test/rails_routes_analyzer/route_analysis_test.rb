@@ -77,42 +77,54 @@ module RailsRoutesAnalyzer
 
       issues = analysis.issues.index_by(&:file_location)
 
-      assert_equal RouteIssue::Resources.new(
+      expected = RouteCall.new(
         file_location: "routes_bad.rb:4",
         route_creation_method: "resources",
         controller_name: "home",
         controller_class_name: "HomeController",
         action_names: [:create, :destroy, :edit, :index, :new, :show, :update],
-        suggested_param: "only: [:index, :show]",
-        verbose_message: nil,
-      ), issues["routes_bad.rb:4"]
+        present_actions: [:index, :show],
+      )
+      expected.add_issue RouteIssue::Resources.new(
+                           suggested_param: "only: [:index, :show]")
 
-      assert_equal RouteIssue::NoAction.new(
+      assert_equal expected, issues["routes_bad.rb:4"]
+
+      expected = RouteCall.new(
         file_location: "routes_bad.rb:7",
         route_creation_method: "get",
         controller_name: "full_items",
         controller_class_name: "FullItemsController",
         action_names: [:missing_member_action],
-        missing_actions: [:missing_member_action],
-      ), issues["routes_bad.rb:7"]
+      )
+      expected.add_issue RouteIssue::NoAction.new(
+                           missing_actions: [:missing_member_action])
 
-      assert_equal RouteIssue::NoAction.new(
+      assert_equal expected, issues["routes_bad.rb:7"]
+
+      expected = RouteCall.new(
         file_location: "routes_bad.rb:10",
         route_creation_method: "post",
         controller_name: "full_items",
         controller_class_name: "FullItemsController",
         action_names: [:missing_collection_action],
-        missing_actions: [:missing_collection_action],
-      ), issues["routes_bad.rb:10"]
+      )
+      expected.add_issue RouteIssue::NoAction.new(
+                           missing_actions: [:missing_collection_action])
 
-      assert_equal RouteIssue::NoController.new(
+      assert_equal expected, issues["routes_bad.rb:10"]
+
+      expected = RouteCall.new(
         file_location: "routes_bad.rb:15",
         route_creation_method: "get",
         controller_name: "unknown_controller",
         controller_class_name: "UnknownControllerController",
         action_names: [:index],
-        error: "uninitialized constant UnknownControllerController",
-      ), issues["routes_bad.rb:15"]
+      )
+      expected.add_issue RouteIssue::NoController.new(
+                           error: "uninitialized constant UnknownControllerController")
+
+      assert_equal expected, issues["routes_bad.rb:15"]
     end
 
     def test_bad_routes_route_log
@@ -172,25 +184,31 @@ module RailsRoutesAnalyzer
 
       issues_for_3 = issues["routes_bad_loops.rb:3"]
       assert_equal 1, issues_for_3.size
-      assert_equal RouteIssue::NoController.new(
+      expected = RouteCall.new(
         file_location: "routes_bad_loops.rb:3",
 	route_creation_method: "resource",
 	controller_name: "somethings",
 	controller_class_name: "SomethingsController",
 	action_names: [:destroy],
-	error: "uninitialized constant SomethingsController",
-      ), issues_for_3[0]
+      )
+      expected.add_issue RouteIssue::NoController.new(
+                           error: "uninitialized constant SomethingsController")
+      assert_equal expected, issues_for_3[0]
 
       issues_for_7 = issues["routes_bad_loops.rb:7"]
 
-      assert_equal RouteIssue::NoAction.new(
+      expected = RouteCall.new(
         file_location: "routes_bad_loops.rb:7",
         route_creation_method: "get",
         controller_name: "home",
         controller_class_name: "HomeController",
         action_names: [:index, :other_action, :unknown_action],
-        missing_actions: [:other_action, :unknown_action],
-      ), issues_for_7[0]
+        present_actions: [:index],
+      )
+      expected.add_issue RouteIssue::NoAction.new(
+                           missing_actions: [:other_action, :unknown_action])
+
+      assert_equal expected, issues_for_7[0]
     end
   end
 end

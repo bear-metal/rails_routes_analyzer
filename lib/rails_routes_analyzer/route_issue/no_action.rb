@@ -4,6 +4,9 @@ module RailsRoutesAnalyzer
   module RouteIssue
 
     class NoAction < Base
+
+      fields :missing_actions
+
       def human_readable_error_message
         missing_actions.map do |action|
           "`#{route_creation_method} :#{action}' call at #{file_location} there is no matching action in #{controller_class_name}"
@@ -13,9 +16,9 @@ module RailsRoutesAnalyzer
         end
       end
 
-      def error_suggestion(non_issues:, num_controllers:)
+      def error_suggestion(has_present_actions:, num_controllers:)
         actions = format_actions(missing_actions)
-        if non_issues
+        if has_present_actions
           "remove case#{'s' if missing_actions.size > 1} for #{actions}"
         else
           "delete line, #{actions} matches nothing"

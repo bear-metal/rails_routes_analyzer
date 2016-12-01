@@ -12,7 +12,7 @@ module RailsRoutesAnalyzer
 
     def test_issues
       line = get_route_line_at 'routes_bad.rb:15'
-      assert_equal 0, line.non_issues.size
+      assert !line.has_present_actions?
       assert_equal 1, line.issues.size
       assert line.issues?
     end

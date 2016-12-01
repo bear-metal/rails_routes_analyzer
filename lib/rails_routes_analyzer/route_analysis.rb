@@ -68,34 +68,37 @@ module RailsRoutesAnalyzer
 
       opts = kwargs.merge(controller_class_name: controller_class_name)
 
+      route_call = RouteCall.new(opts)
+      route_calls << route_call
+
       controller = nil
       begin
         controller = Object.const_get(controller_class_name)
       rescue LoadError, RuntimeError, NameError => e
-        route_calls << RouteIssue::NoController.new(opts.merge(error: e.message))
+        route_call.add_issue RouteIssue::NoController.new(error: e.message)
         return
       end
 
       if controller.nil?
-        route_calls << RouteIssue::NoController.new(opts)
+        route_call.add_issue RouteIssue::NoController.new(error: "#{controller_class_name} is nil")
         return
       end
 
-      analyze_action_availability(controller, **opts.merge(controller_class_name: controller.name))
+      analyze_action_availability(controller, route_call, **opts)
     end
 
     # Checks which if any actions referred to by the route don't exist.
-    def analyze_action_availability(controller, **opts)
+    def analyze_action_availability(controller, route_call, **opts)
       present, missing = opts[:action_names].partition {|name| controller.action_methods.include?(name.to_s) }
 
       if present.any?
-        route_calls << RouteCall.new(opts.merge(present_actions: present))
+        route_call[:present_actions] = present
       end
 
       if SINGLE_METHODS.include?(opts[:route_creation_method])
         # NOTE a single call like 'get' can add multiple actions if called in a loop
         if missing.present?
-          route_calls << RouteIssue::NoAction.new(opts.merge(missing_actions: missing))
+          route_call.add_issue RouteIssue::NoAction.new(missing_actions: missing)
         end
         return
       end
@@ -109,11 +112,7 @@ module RailsRoutesAnalyzer
 
       suggested_param = resource_route_suggested_param(present)
 
-      if verbose
-        verbose_message = "This route currently covers unimplemented actions: [#{missing.sort.map {|x| ":#{x}" }.join(', ')}]"
-      end
-
-      route_calls << RouteIssue::Resources.new(opts.merge(suggested_param: suggested_param, verbose_message: verbose_message))
+      route_call.add_issue RouteIssue::Resources.new(suggested_param: suggested_param)
     end
 
     def resource_route_suggested_param(present)
@@ -142,9 +141,9 @@ module RailsRoutesAnalyzer
 
     def implemented_routes
       Set.new.tap do |implemented_routes|
-        non_issues.each do |non_issue|
-          non_issue.present_actions.each do |action|
-            implemented_routes << [non_issue.controller_class_name, action]
+        route_calls.each do |route_call|
+          (route_call.present_actions || []).each do |action|
+            implemented_routes << [route_call.controller_class_name, action]
           end
         end
       end

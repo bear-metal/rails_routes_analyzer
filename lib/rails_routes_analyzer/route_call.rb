@@ -18,12 +18,25 @@ module RailsRoutesAnalyzer
       :route_creation_method,
       :present_actions
 
-    def initialize(opts={})
-      self.update(opts)
+    def initialize(**kwargs)
+      self.update(kwargs)
+    end
+
+    def issues
+      self[:issues] ||= []
+    end
+
+    def add_issue(issue)
+      issue.route_call = self
+      issues << issue
     end
 
     def issue?
-      false
+      issues.any?
+    end
+
+    def has_present_actions?
+      present_actions.present?
     end
 
     def full_filename
@@ -32,6 +45,20 @@ module RailsRoutesAnalyzer
 
     def line_number
       @line_number ||= file_location[/:([0-9]+)\z/, 1].to_i
+    end
+
+    def suggestion(**kwargs)
+      issues.map { |issue| issue.suggestion(**kwargs) }.join('; ')
+    end
+
+    def human_readable_error(**kwargs)
+      issues.map { |issue| issue.human_readable_error(**kwargs) }.join('; ')
+    end
+
+    def try_to_fix_line(line)
+      if issues.size == 1
+        issues[0].try_to_fix_line(line)
+      end
     end
   end
 

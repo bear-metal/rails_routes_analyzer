@@ -3,13 +3,28 @@ require_relative '../route_call'
 module RailsRoutesAnalyzer
   module RouteIssue
 
-    class Base < RouteCall
-      fields \
-        :error,
-        :missing_actions
+    class Base < Hash
+      def self.fields(*names)
+        names.each do |name|
+          define_method(name) { self[name] }
+          define_method("#{name}=") { |val| self[name] = val }
+        end
+      end
 
-      def issue?
-        true
+      fields :route_call
+
+      delegate \
+        :action,
+        :action_names,
+        :controller_class_name,
+        :controller_name,
+        :file_location,
+        :route_creation_method,
+        :present_actions,
+        to: :route_call
+
+      def initialize(opts={})
+        self.update(opts)
       end
 
       def human_readable_error(verbose: false)
