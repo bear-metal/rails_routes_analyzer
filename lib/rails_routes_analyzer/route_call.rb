@@ -4,7 +4,7 @@ module RailsRoutesAnalyzer
   # about a specific call that generated Rails routes.
   #
   # If called in a loop each iteration generates a new record.
-  class RouteRecord < Hash
+  class RouteCall < Hash
     def self.fields(*names)
       names.each { |name| define_method(name) { self[name] } }
     end

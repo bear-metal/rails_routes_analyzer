@@ -1,5 +1,5 @@
 require_relative 'route_line'
-require_relative 'route_record'
+require_relative 'route_call'
 require_relative 'no_action_route_issue'
 require_relative 'no_controller_route_issue'
 require_relative 'resources_route_issue'
@@ -8,7 +8,7 @@ module RailsRoutesAnalyzer
 
   class RouteAnalysis
     attr_accessor :app, :verbose, :only_only, :only_except
-    attr_accessor :route_log, :route_lines, :route_records
+    attr_accessor :route_log, :route_lines, :route_calls
 
     def initialize(app: Rails.application, verbose: false, only_only: false, only_except: false)
       self.app         = app
@@ -21,7 +21,7 @@ module RailsRoutesAnalyzer
 
     def clear_data
       self.route_lines   = []
-      self.route_records = []
+      self.route_calls = []
       self.route_log     = []
     end
 
@@ -53,7 +53,7 @@ module RailsRoutesAnalyzer
     end
 
     def generate_route_lines
-      route_records.group_by do |record|
+      route_calls.group_by do |record|
         [ record.full_filename, record.line_number ]
       end.each do |(full_filename, line_number), records|
         route_lines << RouteLine.new(full_filename: full_filename,
@@ -71,12 +71,12 @@ module RailsRoutesAnalyzer
       begin
         controller = Object.const_get(controller_class_name)
       rescue LoadError, RuntimeError, NameError => e
-        route_records << NoControllerRouteIssue.new(opts.merge(error: e.message))
+        route_calls << NoControllerRouteIssue.new(opts.merge(error: e.message))
         return
       end
 
       if controller.nil?
-        route_records << NoControllerRouteIssue.new(opts)
+        route_calls << NoControllerRouteIssue.new(opts)
         return
       end
 
@@ -88,13 +88,13 @@ module RailsRoutesAnalyzer
       present, missing = opts[:action_names].partition {|name| controller.action_methods.include?(name.to_s) }
 
       if present.any?
-        route_records << RouteRecord.new(opts.merge(present_actions: present))
+        route_calls << RouteCall.new(opts.merge(present_actions: present))
       end
 
       if SINGLE_METHODS.include?(opts[:route_creation_method])
         # NOTE a single call like 'get' can add multiple actions if called in a loop
         if missing.present?
-          route_records << NoActionRouteIssue.new(opts.merge(missing_actions: missing))
+          route_calls << NoActionRouteIssue.new(opts.merge(missing_actions: missing))
         end
         return
       end
@@ -112,7 +112,7 @@ module RailsRoutesAnalyzer
         verbose_message = "This route currently covers unimplemented actions: [#{missing.sort.map {|x| ":#{x}" }.join(', ')}]"
       end
 
-      route_records << ResourcesRouteIssue.new(opts.merge(suggested_param: suggested_param, verbose_message: verbose_message))
+      route_calls << ResourcesRouteIssue.new(opts.merge(suggested_param: suggested_param, verbose_message: verbose_message))
     end
 
     def resource_route_suggested_param(present)
@@ -124,19 +124,19 @@ module RailsRoutesAnalyzer
     end
 
     def issues
-      route_records.select(&:issue?)
+      route_calls.select(&:issue?)
     end
 
     def non_issues
-      route_records.reject(&:issue?)
+      route_calls.reject(&:issue?)
     end
 
     def all_unique_issues_file_names
       issues.map(&:full_filename).uniq.sort
     end
 
-    def route_records_for_file_name(full_filename)
-      route_records.select { |record| record.full_filename == full_filename.to_s }
+    def route_calls_for_file_name(full_filename)
+      route_calls.select { |record| record.full_filename == full_filename.to_s }
     end
 
     def implemented_routes

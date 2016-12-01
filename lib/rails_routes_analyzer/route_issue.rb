@@ -1,8 +1,8 @@
-require_relative 'route_record'
+require_relative 'route_call'
 
 module RailsRoutesAnalyzer
 
-  class RouteIssue < RouteRecord
+  class RouteIssue < RouteCall
     fields \
       :error,
       :missing_actions
