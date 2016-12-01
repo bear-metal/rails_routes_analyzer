@@ -10,3 +10,4 @@
 /tmp/
 /test/dummy/test.log
 /.byebug_history
+/coverage
