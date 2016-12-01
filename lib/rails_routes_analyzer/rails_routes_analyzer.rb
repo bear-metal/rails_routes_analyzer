@@ -1,3 +1,5 @@
+require_relative 'gem_manager'
+
 module RailsRoutesAnalyzer
 
   MULTI_METHODS = %w[resource resources].freeze
@@ -17,26 +19,9 @@ module RailsRoutesAnalyzer
       unless full_path
         clean_location.gsub! "#{Rails.root}/", './'
 
-        clean_location.gsub! @cleanup_regexp do |val|
-          gem_path_prefix_replacements[val] || val
-        end
+        clean_location.replace GemManager.clean_gem_path(clean_location)
       end
     end
-  end
-
-  # @return { String => String } mapping of gem path prefix to gem name.
-  def self.gem_path_prefix_replacements
-    @gem_path_prefix_replacements ||=
-      Gem.loaded_specs.values.each_with_object({}) do |spec, sum|
-        path = spec.full_gem_path.sub /\/?\z/, '/'
-        sum[path] = "#{spec.name} @ "
-      end
-  end
-
-  # @return [Regexp] a regexp that matches all gem paths.
-  def self.gem_path_prefix_cleanup_regex
-    @gem_path_prefix_cleanup_regex ||=
-      /\A#{Regexp.union(gem_path_prefix_replacements.keys)}/
   end
 
 end

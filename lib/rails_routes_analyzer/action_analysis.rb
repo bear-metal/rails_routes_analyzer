@@ -1,3 +1,5 @@
+require_relative 'gem_manager'
+
 module RailsRoutesAnalyzer
   MAX_ACTION_LENGTH = 30 # Don't align action names longer than this
 
@@ -188,27 +190,13 @@ module RailsRoutesAnalyzer
               is_inherited:    is_inherited,
               route_missing:   route_missing,
               source_location: sanitized_location,
-              from_gem:        identify_gem(source_location),
+              from_gem:        GemManager.identify_gem(source_location),
               owner:           owner,
               from_module:     from_module,
             )
           end
         end
       end
-    end
-
-    def identify_gem(source_location)
-      gem_locations[source_location[gem_locations_regexp]]
-    end
-
-    def gem_locations
-      @gem_locations ||= Gem.loaded_specs.values.each_with_object({}) do |spec, sum|
-        sum[spec.full_gem_path] = spec.name
-      end
-    end
-
-    def gem_locations_regexp
-      @gem_locations_regexp ||= /\A#{Regexp.union(gem_locations.keys)}/
     end
 
     def get_source_location(controller_class_or_name, action_name)
