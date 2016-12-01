@@ -13,4 +13,8 @@ Rails.application.routes.draw do
   resources :full_items, only: [:destroy, :index]
 
   get 'unknown_controller_index', action: :index, controller: 'unknown_controller'
+
+  2.times do |i|
+    get "unknown_index#{i}", action: :index, controller: "unknown_#{i}"
+  end
 end

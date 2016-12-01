@@ -139,6 +139,8 @@ module RailsRoutesAnalyzer
 	[["routes_bad.rb:13", "resources", "full_items"], "full_items", :index, ["GET"]],
 	[["routes_bad.rb:13", "resources", "full_items"], "full_items", :destroy, ["DELETE"]],
 	[["routes_bad.rb:15", "get", "unknown_controller"], "unknown_controller", :index, ["GET"]],
+	[["routes_bad.rb:18", "get", "unknown_0"], "unknown_0", :index, ["GET"]],
+	[["routes_bad.rb:18", "get", "unknown_1"], "unknown_1", :index, ["GET"]]
       ].compact, analysis.route_log
     end
 

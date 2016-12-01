@@ -13,4 +13,8 @@ Rails.application.routes.draw do
   resources :full_items, only: [:destroy, :index]
 
   get 'unknown_controller_index', action: :index, controller: 'unknown_controller' # SUGGESTION delete, UnknownControllerController not found
+
+  2.times do |i|
+    get "unknown_index#{i}", action: :index, controller: "unknown_#{i}" # SUGGESTION delete, Unknown0Controller not found, delete, Unknown1Controller not found
+  end
 end
