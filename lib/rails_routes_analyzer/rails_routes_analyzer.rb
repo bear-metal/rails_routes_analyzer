@@ -1,12 +1,4 @@
-require 'rails/railtie'
-
 module RailsRoutesAnalyzer
-
-  class Railtie < ::Rails::Railtie
-    rake_tasks do
-      load File.join(File.dirname(__FILE__), '../tasks/rails_routes_analyzer.rake')
-    end
-  end
 
   MULTI_METHODS = %w[resource resources].freeze
   SINGLE_METHODS = %w[match get head post patch put delete options root].freeze
