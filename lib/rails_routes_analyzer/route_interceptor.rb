@@ -1,4 +1,4 @@
-require 'rails'
+require 'rails/version'
 
 module RailsRoutesAnalyzer
 
