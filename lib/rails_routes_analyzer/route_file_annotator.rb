@@ -58,7 +58,7 @@ module RailsRoutesAnalyzer
         STDERR.puts "All routes are good, nothing to annotate"
         exit 0
       elsif filenames.size > 1
-        STDERR.puts "Please specify file to annotate with ROUTES_ANNOTATE='path/routes.rb' as you have more than one:\n#{filenames.join("\n  ")}"
+        STDERR.puts "Please specify routes file with ROUTES_FILE='path/routes.rb' as you have more than one file with problems:\n#{filenames.join("\n  ")}"
         exit 1
       end
       filenames.first

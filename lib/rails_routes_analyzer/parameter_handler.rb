@@ -16,7 +16,7 @@ module RailsRoutesAnalyzer
     end
 
     def self.file_to_annotate(env = ENV)
-      env['ROUTES_ANNOTATE']
+      env['ROUTES_FILE']
     end
 
     def self.params_for_fix(env = ENV)
