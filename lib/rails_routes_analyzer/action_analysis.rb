@@ -28,7 +28,7 @@ module RailsRoutesAnalyzer
     end
 
     def needs_reporting?(show_duplicates:, ignore_gems:, report_modules:, report_all:, **)
-      (route_missing?    || report_all)      \
+      (route_missing?     || report_all)      \
         && (!inherited?   || show_duplicates) \
         && (!from_gem?    || !ignore_gems)    \
         && (!from_module? || report_modules)
@@ -204,6 +204,36 @@ module RailsRoutesAnalyzer
       controller = controller.constantize if controller.is_a?(String)
 
       controller.instance_method(action_name).source_location.join(':')
+    end
+
+    def print_report
+      unless options[:report_all]
+        if unused_controllers.present?
+          puts "Controllers with no routes pointing to them:"
+          unused_controllers.sort_by(&:name).each do |controller|
+            puts "  #{controller.name}"
+          end
+          puts
+        end
+
+        unless unused_actions_present?
+          puts "There are no actions without a route"
+          return
+        end
+
+        puts <<-EOS.strip_heredoc
+          NOTE Some gems, such as Devise, are expected to provide actions that have no matching
+               routes in case a particular feature is not enabled, this is normal and expected.
+
+               If any non-action methods are reported please consider making those non-public
+               or using another solution that would make #action_methods not return those.
+
+          Actions without a route:
+
+        EOS
+      end
+
+      report_actions
     end
 
   end

@@ -152,6 +152,17 @@ module RailsRoutesAnalyzer
     def route_lines_for_file(full_filename)
       route_lines.select { |line| line.full_filename == full_filename.to_s }
     end
+
+    def print_report
+      if issues.empty?
+        puts "No route issues found"
+        return
+      end
+
+      issues.each do |issue|
+        puts issue.human_readable_error(verbose: verbose)
+      end
+    end
   end
 
 end
