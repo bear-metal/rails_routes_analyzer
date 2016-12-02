@@ -12,6 +12,7 @@ module RailsRoutesAnalyzer
       params_for_route_analysis.merge(
         try_to_fix:     false,
         allow_deleting: false,
+        force_overwrite: env['ROUTES_FORCE'].present?,
       )
     end
 
@@ -23,6 +24,7 @@ module RailsRoutesAnalyzer
       params_for_route_analysis.merge(
         try_to_fix:     true,
         allow_deleting: true,
+        force_overwrite: env['ROUTES_FORCE'].present?,
       )
     end
 

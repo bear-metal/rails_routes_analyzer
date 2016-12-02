@@ -17,12 +17,30 @@ namespace :routes do
       annotator.annotate_routes_file(RailsRoutesAnalyzer::ParameterHandler.file_to_annotate(ENV))
     end
 
+    desc "Updates routes file(s) with suggestions for fixes in comments, requires unmodified git-controlled file(s)"
+    task :"annotate:inplace" => :environment do
+      annotator = RailsRoutesAnalyzer::RouteFileAnnotator.new(
+                    RailsRoutesAnalyzer::ParameterHandler.params_for_annotate(ENV))
+
+      annotator.annotate_routes_file(
+        RailsRoutesAnalyzer::ParameterHandler.file_to_annotate(ENV), inplace: true)
+    end
+
     desc "Outputs a routes file with simple fixes auto-applied others suggested in comments (doesn't change the original file)"
     task fix: :environment do
       annotator = RailsRoutesAnalyzer::RouteFileAnnotator.new(
                     RailsRoutesAnalyzer::ParameterHandler.params_for_fix(ENV))
 
       annotator.annotate_routes_file(RailsRoutesAnalyzer::ParameterHandler.file_to_annotate(ENV))
+    end
+
+    desc "Updates routes file(s) with simple fixes auto-applied others suggested in comments, requires unmodified git-controlled file(s)"
+    task :"fix:inplace" => :environment do
+      annotator = RailsRoutesAnalyzer::RouteFileAnnotator.new(
+                    RailsRoutesAnalyzer::ParameterHandler.params_for_fix(ENV))
+
+      annotator.annotate_routes_file(
+        RailsRoutesAnalyzer::ParameterHandler.file_to_annotate(ENV), inplace: true)
     end
   end
 

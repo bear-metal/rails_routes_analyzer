@@ -48,6 +48,14 @@ ONLY_EXCEPT=1    # suggestions for resource routes will only generate "except:" 
 ROUTES_VERBOSE=1 # more verbosity, currently this means listing which non-existing actions a given call provides routes for.
 ```
 
+``` sh
+rake routes:dead:annotate:inplace [ROUTES_FILE=path/to/routes.rb]
+rake routes:dead:fix:inplace      [ROUTES_FILE=path/to/routes.rb]
+```
+
+Same as above but these commands change existing routes file content instead of printing it to standard output. By default they'll refuse to change a file if it's outside Rails root or has uncommited changes. To get around this protection set the ROUTES_FORCE=1 parameter.
+
+
 ```sh
 rake actions:missing_route
 rake actions:missing_route[gems,modules,duplicates,full,metadata] # parameters can be combined in all ways
