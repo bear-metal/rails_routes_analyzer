@@ -2,6 +2,7 @@ require_relative "rails_routes_analyzer/version"
 require_relative "rails_routes_analyzer/railtie"
 require_relative "rails_routes_analyzer/rails_routes_analyzer"
 
+require_relative "rails_routes_analyzer/parameter_handler"
 require_relative "rails_routes_analyzer/action_analysis"
 require_relative "rails_routes_analyzer/route_analysis"
 require_relative "rails_routes_analyzer/route_file_annotator"

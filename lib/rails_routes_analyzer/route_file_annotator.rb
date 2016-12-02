@@ -1,8 +1,8 @@
 module RailsRoutesAnalyzer
 
   class RouteFileAnnotator
-    def initialize(analysis: RailsRoutesAnalyzer::RouteAnalysis.new, try_to_fix: false, allow_deleting: false)
-      @analysis = analysis
+    def initialize(try_to_fix: false, allow_deleting: false, analysis: nil, **kwargs)
+      @analysis = analysis || RailsRoutesAnalyzer::RouteAnalysis.new(**kwargs)
       @try_to_fix = try_to_fix
       @allow_deleting = allow_deleting
     end

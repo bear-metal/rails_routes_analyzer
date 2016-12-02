@@ -15,6 +15,7 @@ module RailsRoutesAnalyzer
       is_inherited
       from_gem
       from_module
+      owner
     ].each do |name|
       define_method(name) { self[name] }
     end
@@ -27,10 +28,10 @@ module RailsRoutesAnalyzer
       @controller_class ||= controller_name.constantize
     end
 
-    def needs_reporting?(show_duplicates:, ignore_gems:, report_modules:, report_all:, **)
-      (route_missing?     || report_all)      \
-        && (!inherited?   || show_duplicates) \
-        && (!from_gem?    || !ignore_gems)    \
+    def needs_reporting?(report_duplicates:, report_gems:, report_modules:, report_routed:, **)
+      (route_missing?     || report_routed)     \
+        && (!inherited?   || report_duplicates) \
+        && (!from_gem?    || report_gems)       \
         && (!from_module? || report_modules)
     end
 
@@ -44,7 +45,12 @@ module RailsRoutesAnalyzer
     end
 
     def pretty_metadata
-      "route_missing:#{route_missing?.inspect} inherited:#{inherited?.inspect} from_gem:#{from_gem || false}"
+      [
+        route_missing? ? "no-route"                : nil,
+        inherited?     ? "inherited:#{owner.name}" : nil,
+        from_gem?      ? "gem:#{from_gem}"         : nil,
+        from_module?   ? "module:#{owner.name}"    : nil,
+      ].compact.join(' ')
     end
 
     alias_method :inherited?,     :is_inherited
@@ -58,12 +64,12 @@ module RailsRoutesAnalyzer
     attr_reader :all_action_methods, :unused_controllers, :options
 
     # Options:
-    #  show_duplicates - doesn't report actions which the parent controller also has
-    #  ignore_gems     - doesn't report actions which are implemented outside Rails.root
-    #  full_path       - skips shortening file paths
-    #  report_modules  - show actions inherited from modules
-    #  report_all      - report all actions
-    #  metadata        - include discovered metadata about actions
+    #  report_duplicates - report actions which the parent controller also has
+    #  report_gems       - report actions which are implemented by a gem
+    #  report_modules    - report actions inherited from modules
+    #  report_routed     - report all actions including those with a route
+    #  full_path         - skips shortening file paths
+    #  metadata          - include discovered metadata about actions
     def initialize(route_analysis: RailsRoutesAnalyzer::RouteAnalysis.new, **options)
       @options = options
 
@@ -137,7 +143,7 @@ module RailsRoutesAnalyzer
     def find_unused_controllers
       ActionController::Base.descendants.select do |controller|
         controller_has_no_routes?(controller) && !(controller <= ::Rails::ApplicationController) \
-          && (!options[:ignore_gems] || !controller_likely_from_gem?(controller))
+          && (options[:report_gems] || !controller_likely_from_gem?(controller))
       end
     end
 
@@ -207,7 +213,7 @@ module RailsRoutesAnalyzer
     end
 
     def print_report
-      unless options[:report_all]
+      unless options[:report_routed]
         if unused_controllers.present?
           puts "Controllers with no routes pointing to them:"
           unused_controllers.sort_by(&:name).each do |controller|
