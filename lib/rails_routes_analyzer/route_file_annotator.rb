@@ -54,16 +54,14 @@ module RailsRoutesAnalyzer
     def automatic_filename_for_annotation
       filenames = @analysis.all_unique_issues_file_names
 
-      if filename.blank?
-        if filenames.size == 0
-          STDERR.puts "All routes are good, nothing to annotate"
-          exit 0
-        elsif filenames.size > 1
-          STDERR.puts "Please specify file to annotate with ROUTES_ANNOTATE='path/routes.rb' as you have more than one:\n#{filenames.join("\n  ")}"
-          exit 1
-        end
-        filename = filenames.first
+      if filenames.size == 0
+        STDERR.puts "All routes are good, nothing to annotate"
+        exit 0
+      elsif filenames.size > 1
+        STDERR.puts "Please specify file to annotate with ROUTES_ANNOTATE='path/routes.rb' as you have more than one:\n#{filenames.join("\n  ")}"
+        exit 1
       end
+      filenames.first
     end
   end
 
