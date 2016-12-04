@@ -19,4 +19,6 @@ Rails.application.routes.draw do
   end
   resources :home # random comment
   resources :home
+  resources :empty, only: [:show], controller: 'xxx' do
+  end
 end

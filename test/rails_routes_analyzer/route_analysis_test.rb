@@ -142,7 +142,9 @@ module RailsRoutesAnalyzer
         [["routes_bad.rb:15", "get", "unknown_controller"], "unknown_controller", :index, ["GET"]],
         [["routes_bad.rb:18", "get", "unknown_0"], "unknown_0", :index, ["GET"]],
         [["routes_bad.rb:18", "get", "unknown_1"], "unknown_1", :index, ["GET"]],
-      ] + expected_resources("routes_bad.rb:20") + expected_resources("routes_bad.rb:21")
+      ] + expected_resources("routes_bad.rb:20") + expected_resources("routes_bad.rb:21") + [
+        [["routes_bad.rb:22", "resources", "xxx"], "xxx", :show, ["GET"]],
+      ]
 
       assert_equal expected.compact, analysis.route_log
     end

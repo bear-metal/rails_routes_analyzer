@@ -57,7 +57,7 @@ module RailsRoutesAnalyzer
     # Should avoid deleting lines that look like they might start a block because
     # we're not smart enough to also be able to delete the end of that block.
     def safely_deletable_line?(line)
-      line !~ /( do |{)/
+      line !~ /( do(\s|$)|{)/
     end
 
     def add_suggestions_to(line, suggestions)

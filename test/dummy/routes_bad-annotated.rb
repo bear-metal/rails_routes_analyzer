@@ -19,4 +19,6 @@ Rails.application.routes.draw do
   end
   resources :home # random comment # SUGGESTION use only: [:index, :show]
   resources :home # SUGGESTION use only: [:index, :show]
+  resources :empty, only: [:show], controller: 'xxx' do # SUGGESTION delete, XxxController not found
+  end
 end
