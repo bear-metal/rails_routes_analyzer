@@ -165,7 +165,7 @@ module RailsRoutesAnalyzer
       implemented_routes = Set.new(route_analysis.implemented_routes)
 
       [].tap do |result|
-        ApplicationController.descendants.each do |controller|
+        ActionController::Base.descendants.each do |controller|
           action_methods = controller.action_methods.to_a.map(&:to_sym)
 
           if (parent_controller = controller.superclass) == ActionController::Base
