@@ -9,5 +9,6 @@
 /spec/reports/
 /tmp/
 /test/dummy/test.log
+/test/dummy/tmp
 /.byebug_history
 /coverage
