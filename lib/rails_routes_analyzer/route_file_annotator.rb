@@ -109,7 +109,12 @@ module RailsRoutesAnalyzer
         # This seems to be required to force some kind of git status
         # refresh because without it tests would randomly detect a file
         # as modified by git-status when the file in fact has no changes.
-        git.diff.each { |file| }
+        #
+        # Currently randomly causes a NoMethodError exception but can still help.
+        begin
+          git.diff.each { |file| }
+        rescue NoMethodError # rubocop:disable Lint/HandleExceptions
+        end
 
         if git.status.changed.key?(repo_relative_filename)
           log_notice "Refusing to modify '#{repo_relative_filename}' as it has uncommited changes" if report
