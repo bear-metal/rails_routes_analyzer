@@ -29,28 +29,39 @@ module RailsRoutesAnalyzer
     end
 
     def annotate(line, try_to_fix:, allow_deleting:)
-      if try_to_fix && !(fix_for_line = try_to_fix_line(line, allow_deleting: allow_deleting)).nil?
+      suggestions = combined_suggestions
+      if try_to_fix && !(fix_for_line = try_to_fix_line(line, allow_deleting: allow_deleting,
+                                                              suggestion_comment: "# SUGGESTION #{suggestions}")).nil?
         fix_for_line
       else
-        add_suggestions_to(line)
+        add_suggestions_to(line, suggestions)
       end
     end
 
     # Try to generate an automatic fix for the line, this does not
     # apply to lines with multiple issues (iterations) as those
     # will most likely require changes to the surrounding code.
-    def try_to_fix_line(line, allow_deleting:)
+    def try_to_fix_line(line, allow_deleting:, suggestion_comment:)
+      #debugger if line =~ /home/
       has_one_issue = issues.size == 1
+      has_one_iteration = records.size == 1
 
-      if has_one_issue && !has_present_actions?
+      if has_one_issue && has_one_iteration
         fix = issues[0].try_to_fix_line(line)
-        return fix if fix.present? || (fix == '' && allow_deleting)
+
+        if fix.present? || (fix == '' && allow_deleting && safely_deletable_line?(line))
+          return fix.gsub(suggestion_comment, '').gsub(/\ +$/, '')
+        end
       end
     end
 
-    def add_suggestions_to(line)
-      suggestions = combined_suggestions
+    # Should avoid deleting lines that look like they might start a block because
+    # we're not smart enough to also be able to delete the end of that block.
+    def safely_deletable_line?(line)
+      line !~ /( do |{)/
+    end
 
+    def add_suggestions_to(line, suggestions)
       line.sub(/( # SUGGESTION.*)?$/,
                suggestions.present? ? " # SUGGESTION #{suggestions}" : "")
     end

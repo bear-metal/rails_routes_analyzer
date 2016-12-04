@@ -39,6 +39,7 @@ module RailsRoutesAnalyzer
           \)?
           (\s+(do|{))?      # optional block, either " do" or " {"
           [\t ]*            # any whitespace, except linebreak (not sure why it's matched without 'm' modifier here)
+          (\#.*)?           # an optional comment
         )
         $
       %x

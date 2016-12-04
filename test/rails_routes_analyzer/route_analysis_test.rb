@@ -130,16 +130,9 @@ module RailsRoutesAnalyzer
     def test_bad_routes_route_log
       analysis = setup_bad_routes
 
-      assert_equal [
+      expected = [
 	[["routes_bad.rb:2", "root", "home"], "home", :index, (["GET"] unless rails_3?)],
-	[["routes_bad.rb:4", "resources", "home"], "home", :index, ["GET"]],
-	[["routes_bad.rb:4", "resources", "home"], "home", :create, ["POST"]],
-	[["routes_bad.rb:4", "resources", "home"], "home", :new, ["GET"]],
-	[["routes_bad.rb:4", "resources", "home"], "home", :edit, ["GET"]],
-	[["routes_bad.rb:4", "resources", "home"], "home", :show, ["GET"]],
-	([["routes_bad.rb:4", "resources", "home"], "home", :update, ["PATCH"]] unless rails_3?),
-	[["routes_bad.rb:4", "resources", "home"], "home", :update, ["PUT"]],
-	[["routes_bad.rb:4", "resources", "home"], "home", :destroy, ["DELETE"]],
+      ] + expected_resources("routes_bad.rb:4") + [
 	[["routes_bad.rb:7", "get", "full_items"], "full_items", :missing_member_action, ["GET"]],
 	[["routes_bad.rb:10", "post", "full_items"], "full_items", :missing_collection_action, ["POST"]],
 	[["routes_bad.rb:5", "resources", "full_items"], "full_items", :create, ["POST"]],
@@ -153,7 +146,22 @@ module RailsRoutesAnalyzer
 	[["routes_bad.rb:15", "get", "unknown_controller"], "unknown_controller", :index, ["GET"]],
 	[["routes_bad.rb:18", "get", "unknown_0"], "unknown_0", :index, ["GET"]],
 	[["routes_bad.rb:18", "get", "unknown_1"], "unknown_1", :index, ["GET"]]
-      ].compact, analysis.route_log
+      ] + expected_resources("routes_bad.rb:20") + expected_resources("routes_bad.rb:21")
+      
+      assert_equal expected.compact, analysis.route_log
+    end
+
+    def expected_resources(path, controller="home")
+      [
+        [[path, "resources", controller], controller, :index, ["GET"]],
+        [[path, "resources", controller], controller, :create, ["POST"]],
+        [[path, "resources", controller], controller, :new, ["GET"]],
+        [[path, "resources", controller], controller, :edit, ["GET"]],
+        [[path, "resources", controller], controller, :show, ["GET"]],
+       ([[path, "resources", controller], controller, :update, ["PATCH"]] unless rails_3?),
+        [[path, "resources", controller], controller, :update, ["PUT"]],
+        [[path, "resources", controller], controller, :destroy, ["DELETE"]],
+      ]
     end
 
     def test_bad_routes_implemented_routes

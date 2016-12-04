@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
   root to: 'home#index'
 
-  resources :home # SUGGESTION random old suggestion to be replaced
+  resources :home # SUGGESTION use only: [:index, :show]
   resources :full_items, except: [:destroy, :index] do
     member do
       get :missing_member_action
@@ -17,4 +17,6 @@ Rails.application.routes.draw do
   2.times do |i|
     get "unknown_index#{i}", action: :index, controller: "unknown_#{i}"
   end
+  resources :home # random comment
+  resources :home
 end

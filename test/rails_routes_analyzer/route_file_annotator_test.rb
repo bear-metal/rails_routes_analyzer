@@ -100,7 +100,7 @@ module RailsRoutesAnalyzer
       tmp_file = Rails.root.join('tmp/routes_bad.rb')
       FileUtils.cp file, tmp_file
 
-      annotator = setup_annotator(file: tmp_file, force_overwrite: true, try_to_fix: true)
+      annotator = setup_annotator(file: tmp_file, force_overwrite: true, try_to_fix: true, allow_deleting: true)
 
       stdout, stderr = capture_io do
         annotator.annotate_routes_file(tmp_file, inplace: true, do_exit: false)
