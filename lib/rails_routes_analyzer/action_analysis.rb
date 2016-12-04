@@ -1,5 +1,9 @@
 require_relative 'gem_manager'
 
+require 'active_support/descendants_tracker'
+require 'active_support/core_ext/class/subclasses'
+require 'active_support/core_ext/string/strip'
+
 module RailsRoutesAnalyzer
   MAX_ACTION_LENGTH = 30 # Don't align action names longer than this
 
