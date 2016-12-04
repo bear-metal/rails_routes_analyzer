@@ -19,6 +19,7 @@ module RailsRoutesAnalyzer
       env = { 'ROUTES_FORCE' => '1' }
       expected = expected.merge(force_overwrite: true)
       assert_equal expected, ParameterHandler.params_for_annotate(env)
+      assert_equal expected, ParameterHandler.params_for_annotate({}, %w(force))
     end
 
     def test_file_to_annotate
@@ -34,6 +35,7 @@ module RailsRoutesAnalyzer
       env = { 'ROUTES_FORCE' => '1' }
       expected = expected.merge(force_overwrite: true)
       assert_equal expected, ParameterHandler.params_for_fix(env)
+      assert_equal expected, ParameterHandler.params_for_fix({}, %w(force))
     end
 
     def test_params_for_action_analysis
