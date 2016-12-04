@@ -23,8 +23,8 @@ module RailsRoutesAnalyzer
         :present_actions,
         to: :route_call
 
-      def initialize(opts={})
-        self.update(opts)
+      def initialize(opts = {})
+        update(opts)
       end
 
       def human_readable_error(verbose: false)
@@ -33,7 +33,7 @@ module RailsRoutesAnalyzer
         end
       end
 
-      def get_verbose_message
+      def verbose_message
       end
 
       def suggestion(verbose: false, **kwargs)
@@ -43,18 +43,18 @@ module RailsRoutesAnalyzer
       end
 
       def append_verbose_message(message)
-        if (verbose_message = get_verbose_message).present?
-          message << "| #{verbose_message}"
-        end
+        verbose = verbose_message
+        message << "| #{verbose}" if verbose.present?
       end
 
-      def try_to_fix_line(line)
+      def try_to_fix_line(_line)
         raise NotImplementedError, 'should be provided by subclasses'
       end
 
       def format_actions(actions)
         case actions.size
         when 0
+          nil
         when 1
           ":#{actions.first}"
         else

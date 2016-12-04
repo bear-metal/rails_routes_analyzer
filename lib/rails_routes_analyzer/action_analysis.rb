@@ -11,7 +11,7 @@ module RailsRoutesAnalyzer
     # is_inherited - action is inherited from a parent controller
     # from_gem     - action is implemented in a gem
     # from_module  - action implementation is in a module
-    %i[
+    %i(
       controller_name
       action_name
       route_missing
@@ -20,12 +20,12 @@ module RailsRoutesAnalyzer
       from_gem
       from_module
       owner
-    ].each do |name|
+    ).each do |name|
       define_method(name) { self[name] }
     end
 
-    def initialize(opts={})
-      self.update(opts)
+    def initialize(opts = {})
+      update(opts)
     end
 
     def controller_class
@@ -40,7 +40,7 @@ module RailsRoutesAnalyzer
     end
 
     def pretty(max_action_length: MAX_ACTION_LENGTH, metadata: false, **)
-      ("%-#{max_action_length}s @ %s" % [ action_name, source_location ]).tap do |result|
+      format("%-#{max_action_length}s @ %s", action_name, source_location).tap do |result|
         if metadata
           result << " "
           result << pretty_metadata
@@ -57,10 +57,10 @@ module RailsRoutesAnalyzer
       ].compact.join(' ')
     end
 
-    alias_method :inherited?,     :is_inherited
-    alias_method :route_missing?, :route_missing
-    alias_method :from_gem?,      :from_gem
-    alias_method :from_module?,   :from_module
+    alias inherited?     is_inherited
+    alias route_missing? route_missing
+    alias from_gem?      from_gem
+    alias from_module?   from_module
   end
 
   class ActionAnalysis
@@ -98,9 +98,7 @@ module RailsRoutesAnalyzer
     end
 
     def print_report
-      unless options[:report_routed]
-        print_missing_routes_report_preamble
-      end
+      print_missing_routes_report_preamble unless options[:report_routed]
       print_actions_report
     end
 
@@ -142,10 +140,10 @@ module RailsRoutesAnalyzer
             action_level += 1
           end
 
-          max_action_length = [MAX_ACTION_LENGTH, actions.map {|a| a.action_name.size }.max].min
+          max_action_length = [MAX_ACTION_LENGTH, actions.map { |a| a.action_name.size }.max].min
 
           actions.each do |action|
-            puts "#{'  '*action_level}#{action.pretty(max_action_length: max_action_length, **options)}"
+            puts "#{'  ' * action_level}#{action.pretty(max_action_length: max_action_length, **options)}"
           end
         end
 
@@ -158,7 +156,7 @@ module RailsRoutesAnalyzer
     end
 
     def controller_needs_reporting?(controller)
-      if @controller_reporting_cache.has_key?(controller)
+      if @controller_reporting_cache.key?(controller)
         return @controller_reporting_cache[controller]
       end
 
@@ -170,12 +168,12 @@ module RailsRoutesAnalyzer
     def find_unused_controllers
       ActionController::Base.descendants.select do |controller|
         controller_has_no_routes?(controller) \
-          && !is_default_controller?(controller) \
+          && !default_controller?(controller) \
           && (options[:report_gems] || !controller_likely_from_gem?(controller))
       end
     end
 
-    def is_default_controller?(controller)
+    def default_controller?(controller)
       defined?(::Rails::ApplicationController) && controller <= ::Rails::ApplicationController
     end
 
@@ -193,7 +191,7 @@ module RailsRoutesAnalyzer
 
       [].tap do |result|
         ActionController::Base.descendants.each do |controller|
-          next if is_default_controller?(controller)
+          next if default_controller?(controller)
 
           action_methods = controller.action_methods.to_a.map(&:to_sym)
 

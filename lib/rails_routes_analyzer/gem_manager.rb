@@ -26,7 +26,7 @@ module RailsRoutesAnalyzer
     def gem_path_prefix_replacements
       @gem_path_prefix_replacements ||=
         Gem.loaded_specs.values.each_with_object({}) do |spec, sum|
-          path = spec.full_gem_path.sub /\/?\z/, '/'
+          path = spec.full_gem_path.sub %r{/?\z}, '/'
           sum[path] = "#{spec.name} @ "
         end
     end

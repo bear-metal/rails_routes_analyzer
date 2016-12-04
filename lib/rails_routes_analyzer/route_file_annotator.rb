@@ -26,28 +26,26 @@ module RailsRoutesAnalyzer
         File.readlines(route_filename).each_with_index do |line, index|
           route_line = route_lines_map[index + 1]
 
-          if route_line
-            output << route_line.annotate(line,
-                                          try_to_fix:     @try_to_fix,
-                                          allow_deleting: @allow_deleting)
-          else
-            output << line
-          end
+          output <<
+            if route_line
+              route_line.annotate(line,
+                                  try_to_fix:     @try_to_fix,
+                                  allow_deleting: @allow_deleting)
+            else
+              line
+            end
         end
       end
     end
 
-    def annotate_routes_file(filename, inplace: false, do_exit: true)
-      filenames = files_to_work_on(filename, inplace: inplace)
-      if filenames.kind_of?(Numeric)
-        if do_exit
-          exit filenames
-        else
-          return filenames
-        end
+    def annotate_routes_file(route_filename, inplace: false, do_exit: true)
+      filenames = files_to_work_on(route_filename, inplace: inplace)
+      if filenames.is_a?(Integer)
+        exit filenames if do_exit
+        return filenames
       end
 
-      filenames.map! { |filename| RailsRoutesAnalyzer.get_full_filename(filename) }
+      filenames.map! { |file| RailsRoutesAnalyzer.get_full_filename(file) }
 
       filenames.each do |filename|
         unless File.exist?(filename)
@@ -78,46 +76,48 @@ module RailsRoutesAnalyzer
       self.class.log_notice(*args, &block)
     end
 
-    def self.log_notice(message=nil, &block)
-      return if ENV['RAILS_ENV'] == 'test'
-      message ||= block.call if block
-      $stderr.puts "# #{message}" if message.present?
-    end
-
-    def self.check_file_is_modifiable(filename, report: false, **kwargs)
-      unless filename.to_s.starts_with?(Rails.root.to_s)
-        log_notice "Refusing to modify files outside Rails root: #{Rails.root.to_s}" if report
-        return false
+    class << self
+      def log_notice(message = nil)
+        return if ENV['RAILS_ENV'] == 'test'
+        message ||= yield if block_given?
+        $stderr.puts "# #{message}" if message.present?
       end
 
-      check_file_git_status(filename, report: report, **kwargs)
-    end
+      def check_file_is_modifiable(filename, report: false, **kwargs)
+        unless filename.to_s.starts_with?(Rails.root.to_s)
+          log_notice "Refusing to modify files outside Rails root: #{Rails.root}" if report
+          return false
+        end
 
-    def self.check_file_git_status(filename, report: false, skip_git: false, repo_root: Rails.root.to_s)
-      return skip_git if skip_git
-
-      git = nil
-      begin
-        require 'git'
-        git = Git.open(repo_root)
-      rescue => e
-        log_notice "Couldn't access git repository at Rails root #{repo_root}. #{e.message}" if report
-        return false
+        check_file_git_status(filename, report: report, **kwargs)
       end
 
-      repo_relative_filename = filename.to_s.sub("#{repo_root}/", '')
+      def check_file_git_status(filename, report: false, skip_git: false, repo_root: Rails.root.to_s)
+        return skip_git if skip_git
 
-      # This seems to be required to force some kind of git status
-      # refresh because without it tests would randomly detect a file
-      # as modified by git-status when the file in fact has no changes.
-      git.diff.each { |file| }
+        git = nil
+        begin
+          require 'git'
+          git = Git.open(repo_root)
+        rescue => e
+          log_notice "Couldn't access git repository at Rails root #{repo_root}. #{e.message}" if report
+          return false
+        end
 
-      if git.status.changed.has_key?(repo_relative_filename)
-        log_notice "Refusing to modify '#{repo_relative_filename}' as it has uncommited changes" if report
-        return false
+        repo_relative_filename = filename.to_s.sub("#{repo_root}/", '')
+
+        # This seems to be required to force some kind of git status
+        # refresh because without it tests would randomly detect a file
+        # as modified by git-status when the file in fact has no changes.
+        git.diff.each { |file| }
+
+        if git.status.changed.key?(repo_relative_filename)
+          log_notice "Refusing to modify '#{repo_relative_filename}' as it has uncommited changes" if report
+          return false
+        end
+
+        true
       end
-
-      true
     end
 
     def annotatable_routes_files(inplace:)
@@ -135,7 +135,7 @@ module RailsRoutesAnalyzer
 
       filenames = annotatable_routes_files(inplace: inplace)
 
-      if filenames.size == 0
+      if filenames.empty?
         $stderr.puts "All routes are good, nothing to annotate"
         return 0
       elsif filenames.size > 1 && !inplace

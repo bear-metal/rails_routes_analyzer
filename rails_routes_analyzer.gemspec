@@ -10,8 +10,8 @@ Gem::Specification.new do |spec|
   spec.email         = ["tarmo@bearmetal.eu"]
   spec.required_ruby_version = ">= 2.1.0"
 
-  spec.summary       = %q{Helps clean up rails routes}
-  #spec.description   = %q{}
+  spec.summary       = "Helps clean up rails routes"
+  spec.description   = "Tools to identify and in some cases automatically remove unused Rails routes.\nAlso includes a tool to find action methods without routes and list all action methods provided by the application."
   spec.homepage      = "https://github.com/bear-metal/rails_routes_analyzer"
   spec.license       = "MIT"
 

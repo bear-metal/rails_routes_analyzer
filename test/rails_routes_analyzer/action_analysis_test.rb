@@ -40,7 +40,7 @@ module RailsRoutesAnalyzer
         ["ControllerIncludingModule", :module_provided_action],
         ["SubclassHomeController",    :index],
         ["SubclassHomeController",    :show],
-        ["SubclassHomeController",    :subclass_action]
+        ["SubclassHomeController",    :subclass_action],
       ]
       assert_report expected, report
     end
@@ -59,7 +59,7 @@ module RailsRoutesAnalyzer
         ["ControllerIncludingModule", :module_provided_action],
         ["SubclassHomeController",    :index],
         ["SubclassHomeController",    :show],
-        ["SubclassHomeController",    :subclass_action]
+        ["SubclassHomeController",    :subclass_action],
       ]
       assert_report expected, report
     end
@@ -118,7 +118,7 @@ module RailsRoutesAnalyzer
               subclass_action @ ./application.rb:56
       EOF
 
-      stdout, _ = capture_io { report.print_report }
+      stdout, = capture_io { report.print_report }
       assert_equal expected, stdout
     end
 
@@ -140,7 +140,7 @@ module RailsRoutesAnalyzer
               subclass_action @ ./application.rb:56 no-route
       EOF
 
-      stdout, _ = capture_io { report.print_report }
+      stdout, = capture_io { report.print_report }
       assert_equal expected, stdout
     ensure
       ApplicationController.broken_action_methods = false
@@ -159,7 +159,7 @@ module RailsRoutesAnalyzer
               subclass_action @ ./application.rb:56
       EOF
 
-      stdout, _ = capture_io { report.print_report }
+      stdout, = capture_io { report.print_report }
       assert_equal expected, stdout
     end
 
@@ -169,7 +169,7 @@ module RailsRoutesAnalyzer
 
       expected = "There are no actions without a route\n"
 
-      stdout, _ = capture_io { report.print_report }
+      stdout, = capture_io { report.print_report }
       assert_equal expected, stdout
 
       report = get_action_analysis(gem_name: 'random_gem', report_gems: true)
@@ -181,7 +181,7 @@ module RailsRoutesAnalyzer
               subclass_action @ ./application.rb:56
       EOF
 
-      stdout, _ = capture_io { report.print_report }
+      stdout, = capture_io { report.print_report }
       assert_equal expected, stdout
     end
 
@@ -190,7 +190,7 @@ module RailsRoutesAnalyzer
     def assert_report(expected, report)
       assert_equal expected.sort,
                    report.map { |action|
-                     [ action.controller_name, action.action_name  ]
+                     [action.controller_name, action.action_name]
                    }.sort
     end
   end

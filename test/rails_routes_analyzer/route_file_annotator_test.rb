@@ -35,14 +35,14 @@ module RailsRoutesAnalyzer
       file = Rails.root.join('routes_bad.rb')
       annotator = setup_annotator(file: file)
       assert_equal File.read(Rails.root.join('routes_bad-annotated.rb')),
-        annotator.annotated_file_content(file)
+                   annotator.annotated_file_content(file)
     end
 
     def test_annotate_bad_loops_file
       file = Rails.root.join('routes_bad_loops.rb')
       annotator = setup_annotator(file: file)
       assert_equal File.read(Rails.root.join('routes_bad_loops-annotated.rb')),
-        annotator.annotated_file_content(file)
+                   annotator.annotated_file_content(file)
     end
 
     def test_annotate_routes_file_empty_file
@@ -77,7 +77,7 @@ module RailsRoutesAnalyzer
       end
 
       assert_equal "", stdout
-      assert_equal "Please specify routes file with ROUTES_FILE='path/routes.rb' as you have more than one file with problems:\n  #{file1.to_s}\n  #{file2.to_s}\n", stderr
+      assert_equal "Please specify routes file with ROUTES_FILE='path/routes.rb' as you have more than one file with problems:\n  #{file1}\n  #{file2}\n", stderr
     end
 
     def test_annotate_bad_routes_file_inplace
@@ -92,6 +92,7 @@ module RailsRoutesAnalyzer
       end
 
       assert_equal File.read(Rails.root.join('routes_bad-annotated.rb')), File.read(tmp_file)
+      assert_equal "", stdout
       assert_equal "", stderr
     end
 
@@ -107,6 +108,7 @@ module RailsRoutesAnalyzer
       end
 
       assert_equal File.read(Rails.root.join('routes_bad-corrected.rb')), File.read(tmp_file)
+      assert_equal "", stdout
       assert_equal "", stderr
     end
 

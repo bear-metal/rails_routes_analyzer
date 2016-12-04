@@ -101,7 +101,6 @@ module RailsRoutesAnalyzer
         # Unsupported parameter forms
         assert_replacement nil,
                            "resources :some, options"
-
       end
 
       def assert_replacement(result, original)

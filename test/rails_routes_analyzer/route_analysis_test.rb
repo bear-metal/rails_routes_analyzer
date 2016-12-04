@@ -7,12 +7,12 @@ module RailsRoutesAnalyzer
     end
 
     def rails_3?
-      Rails.version =~ /\A3\./
+      Rails::VERSION::MAJOR == 3
     end
 
     def setup_clean_routes
       Rails.application.routes_reloader.paths << Rails.root.join('routes_clean.rb')
-      analysis = RouteAnalysis.new
+      RouteAnalysis.new
     end
 
     def test_with_no_application_routes
@@ -85,8 +85,7 @@ module RailsRoutesAnalyzer
         action_names: [:create, :destroy, :edit, :index, :new, :show, :update],
         present_actions: [:index, :show],
       )
-      expected.add_issue RouteIssue::Resources.new(
-                           suggested_param: "only: [:index, :show]")
+      expected.add_issue RouteIssue::Resources.new(suggested_param: "only: [:index, :show]")
 
       assert_equal expected, issues["routes_bad.rb:4"]
 
@@ -97,8 +96,7 @@ module RailsRoutesAnalyzer
         controller_class_name: "FullItemsController",
         action_names: [:missing_member_action],
       )
-      expected.add_issue RouteIssue::NoAction.new(
-                           missing_actions: [:missing_member_action])
+      expected.add_issue RouteIssue::NoAction.new(missing_actions: [:missing_member_action])
 
       assert_equal expected, issues["routes_bad.rb:7"]
 
@@ -109,8 +107,7 @@ module RailsRoutesAnalyzer
         controller_class_name: "FullItemsController",
         action_names: [:missing_collection_action],
       )
-      expected.add_issue RouteIssue::NoAction.new(
-                           missing_actions: [:missing_collection_action])
+      expected.add_issue RouteIssue::NoAction.new(missing_actions: [:missing_collection_action])
 
       assert_equal expected, issues["routes_bad.rb:10"]
 
@@ -121,8 +118,7 @@ module RailsRoutesAnalyzer
         controller_class_name: "UnknownControllerController",
         action_names: [:index],
       )
-      expected.add_issue RouteIssue::NoController.new(
-                           error: "uninitialized constant UnknownControllerController")
+      expected.add_issue RouteIssue::NoController.new(error: "uninitialized constant UnknownControllerController")
 
       assert_equal expected, issues["routes_bad.rb:15"]
     end
@@ -145,13 +141,13 @@ module RailsRoutesAnalyzer
         [["routes_bad.rb:13", "resources", "full_items"], "full_items", :destroy, ["DELETE"]],
         [["routes_bad.rb:15", "get", "unknown_controller"], "unknown_controller", :index, ["GET"]],
         [["routes_bad.rb:18", "get", "unknown_0"], "unknown_0", :index, ["GET"]],
-        [["routes_bad.rb:18", "get", "unknown_1"], "unknown_1", :index, ["GET"]]
+        [["routes_bad.rb:18", "get", "unknown_1"], "unknown_1", :index, ["GET"]],
       ] + expected_resources("routes_bad.rb:20") + expected_resources("routes_bad.rb:21")
-      
+
       assert_equal expected.compact, analysis.route_log
     end
 
-    def expected_resources(path, controller="home")
+    def expected_resources(path, controller = "home")
       [
         [[path, "resources", controller], controller, :index, ["GET"]],
         [[path, "resources", controller], controller, :create, ["POST"]],
@@ -199,8 +195,7 @@ module RailsRoutesAnalyzer
         controller_class_name: "SomethingsController",
         action_names: [:destroy],
       )
-      expected.add_issue RouteIssue::NoController.new(
-                           error: "uninitialized constant SomethingsController")
+      expected.add_issue RouteIssue::NoController.new(error: "uninitialized constant SomethingsController")
       assert_equal expected, issues_for_3[0]
 
       issues_for_7 = issues["routes_bad_loops.rb:7"]
@@ -213,8 +208,7 @@ module RailsRoutesAnalyzer
         action_names: [:index, :other_action, :unknown_action],
         present_actions: [:index],
       )
-      expected.add_issue RouteIssue::NoAction.new(
-                           missing_actions: [:other_action, :unknown_action])
+      expected.add_issue RouteIssue::NoAction.new(missing_actions: [:other_action, :unknown_action])
 
       assert_equal expected, issues_for_7[0]
     end

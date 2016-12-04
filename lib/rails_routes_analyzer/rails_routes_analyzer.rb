@@ -2,8 +2,8 @@ require_relative 'gem_manager'
 
 module RailsRoutesAnalyzer
 
-  MULTI_METHODS = %w[resource resources].freeze
-  SINGLE_METHODS = %w[match get head post patch put delete options root].freeze
+  MULTI_METHODS = %w(resource resources).freeze
+  SINGLE_METHODS = %w(match get head post patch put delete options root).freeze
   ROUTE_METHODS = (MULTI_METHODS + SINGLE_METHODS).freeze
 
   # Converts Rails.root-relative filenames to be absolute.

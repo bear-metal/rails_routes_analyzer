@@ -13,7 +13,7 @@ module RailsRoutesAnalyzer
         end
       end
 
-      def error_suggestion(has_present_actions:, **kwargs)
+      def error_suggestion(has_present_actions:, **)
         if has_present_actions
           "remove case for #{controller_class_name} as it doesn't exist"
         else
@@ -21,7 +21,7 @@ module RailsRoutesAnalyzer
         end
       end
 
-      def try_to_fix_line(line)
+      def try_to_fix_line(_line)
         '' # Delete
       end
     end

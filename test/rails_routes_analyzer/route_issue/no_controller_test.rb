@@ -13,19 +13,19 @@ module RailsRoutesAnalyzer
       def test_unknown_controller_suggestion_without_iteration
         issue = get_issue_at 'routes_bad.rb:15'
         assert_equal "delete, UnknownControllerController not found",
-          issue.suggestion(has_present_actions: false, num_controllers: 1)
+                     issue.suggestion(has_present_actions: false, num_controllers: 1)
 
         assert_equal "remove case for UnknownControllerController as it doesn't exist",
-          issue.suggestion(has_present_actions: true, num_controllers: 1)
+                     issue.suggestion(has_present_actions: true, num_controllers: 1)
       end
 
       def test_unknown_controller_suggestion_with_iteration
         issue = get_issue_at 'routes_bad.rb:18'
         assert_equal "delete, Unknown0Controller not found",
-          issue.suggestion(has_present_actions: false, num_controllers: 2)
+                     issue.suggestion(has_present_actions: false, num_controllers: 2)
 
         assert_equal "remove case for Unknown0Controller as it doesn't exist",
-          issue.suggestion(has_present_actions: true, num_controllers: 2)
+                     issue.suggestion(has_present_actions: true, num_controllers: 2)
       end
     end
 

@@ -28,7 +28,7 @@ module RailsRoutesAnalyzer
       )
     end
 
-    def self.params_for_action_analysis(env = ENV, extras=[])
+    def self.params_for_action_analysis(env = ENV, extras = [])
       {
         report_duplicates: env['ROUTES_DUPLICATES'].present? || extras.include?('duplicates'),
         report_gems:       env['ROUTES_GEMS'].present?       || extras.include?('gems'),

@@ -19,7 +19,7 @@ module RailsRoutesAnalyzer
       :present_actions
 
     def initialize(**kwargs)
-      self.update(kwargs)
+      update(kwargs)
     end
 
     def issues
@@ -35,7 +35,7 @@ module RailsRoutesAnalyzer
       issues.any?
     end
 
-    def has_present_actions?
+    def present_actions?
       present_actions.present?
     end
 
@@ -56,9 +56,9 @@ module RailsRoutesAnalyzer
     end
 
     def try_to_fix_line(line)
-      if issues.size == 1
-        issues[0].try_to_fix_line(line)
-      end
+      return if issues.size != 1
+
+      issues[0].try_to_fix_line(line)
     end
   end
 

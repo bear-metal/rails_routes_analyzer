@@ -8,12 +8,13 @@ module RailsRoutesAnalyzer
       fields :missing_actions
 
       def human_readable_error_message
-        missing_actions.map do |action|
+        messages = missing_actions.map do |action|
           "`#{route_creation_method} :#{action}' call at #{file_location} there is no matching action in #{controller_class_name}"
-        end.tap do |result|
-          return nil if result.size == 0
-          return result[0] if result.size == 1
         end
+
+        return if messages.empty?
+
+        messages.size == 1 ? messages[0] : messages
       end
 
       def error_suggestion(has_present_actions:, num_controllers:)
@@ -27,7 +28,7 @@ module RailsRoutesAnalyzer
         end
       end
 
-      def try_to_fix_line(line)
+      def try_to_fix_line(_line)
         '' # Delete
       end
     end

@@ -16,8 +16,8 @@ module RailsRoutesAnalyzer
       @file_location ||= "#{full_filename}:#{line_number}"
     end
 
-    def has_present_actions?
-      records.any?(&:has_present_actions?)
+    def present_actions?
+      records.any?(&:present_actions?)
     end
 
     def issues
@@ -42,17 +42,16 @@ module RailsRoutesAnalyzer
     # apply to lines with multiple issues (iterations) as those
     # will most likely require changes to the surrounding code.
     def try_to_fix_line(line, allow_deleting:, suggestion_comment:)
-      #debugger if line =~ /home/
       has_one_issue = issues.size == 1
       has_one_iteration = records.size == 1
 
-      if has_one_issue && has_one_iteration
-        fix = issues[0].try_to_fix_line(line)
+      return unless has_one_issue && has_one_iteration
 
-        if fix.present? || (fix == '' && allow_deleting && safely_deletable_line?(line))
-          return fix.gsub(suggestion_comment, '').gsub(/\ +$/, '')
-        end
-      end
+      fix = issues[0].try_to_fix_line(line)
+
+      return unless fix.present? || (fix == '' && allow_deleting && safely_deletable_line?(line))
+
+      fix.gsub(suggestion_comment, '').gsub(/\ +$/, '')
     end
 
     # Should avoid deleting lines that look like they might start a block because
@@ -74,7 +73,7 @@ module RailsRoutesAnalyzer
       return unless issues?
 
       context = {
-        has_present_actions: has_present_actions?,
+        has_present_actions: present_actions?,
         num_controllers:     all_controller_class_names.count,
       }
 

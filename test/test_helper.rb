@@ -24,7 +24,7 @@ module RailsRoutesAnalyzer
   class TestCase < Minitest::Test
 
     def setup_route_analysis(location: nil, file: 'routes_bad.rb')
-      file, _ = location.split(':') if location
+      file, = location.split(':') if location
 
       Rails.application.routes_reloader.paths.clear
       Rails.application.routes_reloader.paths << Rails.root.join(file)
@@ -35,7 +35,7 @@ module RailsRoutesAnalyzer
       analysis = setup_route_analysis(location: location)
       analysis.issues.detect do |issue|
         issue.file_location == location
-      end or raise("Failed to find issue at #{location}, found at: #{analysis.issues.map(&:file_location).join(', ')}")
+      end || raise("Failed to find issue at #{location}, found at: #{analysis.issues.map(&:file_location).join(', ')}")
     end
 
   end

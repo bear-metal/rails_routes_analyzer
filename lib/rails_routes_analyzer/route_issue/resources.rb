@@ -11,15 +11,13 @@ module RailsRoutesAnalyzer
         "`#{route_creation_method}' call at #{file_location} for #{controller_class_name} should use #{suggested_param}"
       end
 
-      def error_suggestion(num_controllers:, **kwargs)
+      def error_suggestion(num_controllers:, **)
         "use #{suggested_param}".tap do |message|
-          if num_controllers > 1
-            message << " only for #{controller_class_name}"
-          end
+          message << " only for #{controller_class_name}" if num_controllers > 1
         end
       end
 
-      def get_verbose_message
+      def verbose_message
         "This route currently covers unimplemented actions: #{format_actions(missing_actions.sort)}"
       end
 
@@ -44,7 +42,7 @@ module RailsRoutesAnalyzer
         $
       %x
 
-      ONLY_EXCEPT_PARAM_REGEX = %r%
+      ONLY_EXCEPT_PARAM_REGEX = %r{
         (
           (:(?<key>only|except)\s*=>)  # ":only =>" or ":except =>"
           |
@@ -56,9 +54,9 @@ module RailsRoutesAnalyzer
           |
           :\w+        # or a symbol
         )
-      %x
+      }x
 
-      RESOURCE_OTHER_PARAM_REGEX = %r%
+      RESOURCE_OTHER_PARAM_REGEX = %r{
         (
           (:(?<key>\w+)\s*=>)
           |
@@ -78,7 +76,7 @@ module RailsRoutesAnalyzer
           |
           false
         )
-      %x
+      }x
 
       def try_to_fix_line(line, suggestion: suggested_param)
         self.class.try_to_fix_resources_line(line, suggestion)
@@ -88,10 +86,12 @@ module RailsRoutesAnalyzer
         data = line.match(RESOURCES_PARSE_REGEX)
         line_break = line[/$(.*)\z/m, 1]
 
-        if data
-          separator = data[:separator].presence || ', '
+        return unless data
 
-          params = if [nil, ''].include?(data[:params])
+        separator = data[:separator].presence || ', '
+
+        params = \
+          if [nil, ''].include?(data[:params])
             suggestion
           elsif (existing = data[:params][ONLY_EXCEPT_PARAM_REGEX]).present?
             # We get here if the only/except parameter already exists and
@@ -100,17 +100,16 @@ module RailsRoutesAnalyzer
           elsif does_params_look_like_a_safe_hash?(data[:params])
             # If params looks like a hash it should be safe to append the suggestion
             "#{data[:params]}, #{suggestion}"
-          elsif match = data[:params].match(/\A(?<opening>\s*{\s*)(?<inner_data>.*?)(?<closing>\s*}\s*)\z/)
+          elsif (match = data[:params].match(/\A(?<opening>\s*{\s*)(?<inner_data>.*?)(?<closing>\s*}\s*)\z/))
             # If params looks like a safe hash between { and } then add they key inside the hash
             if does_params_look_like_a_safe_hash?(match[:inner_data])
               "#{match[:opening]}#{match[:inner_data]}, #{suggestion}#{match[:closing]}"
             end
           end
 
-          if params
-            "#{data[:beginning]}#{separator}#{params}#{data[:end]}#{line_break}"
-          end
-        end
+        return unless params
+
+        "#{data[:beginning]}#{separator}#{params}#{data[:end]}#{line_break}"
       end
 
       # Check if the parameter string contains only a limited set of known
@@ -126,7 +125,7 @@ module RailsRoutesAnalyzer
         result.gsub!(/\s/, '')
 
         # check that the result string looks like: "X" or "X,X", "X,X,X" depending on how many parameters there were
-        result.split(',').uniq == %w[ X ]
+        result.split(',').uniq == %w(X)
       end
     end
 

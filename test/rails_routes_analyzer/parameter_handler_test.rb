@@ -51,7 +51,7 @@ module RailsRoutesAnalyzer
 
       assert_equal expected, ParameterHandler.params_for_action_analysis(env)
 
-      extras = %w[ duplicates gems modules full metadata ]
+      extras = %w(duplicates gems modules full metadata)
       assert_equal expected, ParameterHandler.params_for_action_analysis({}, extras)
     end
 

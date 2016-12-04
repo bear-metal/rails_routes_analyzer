@@ -5,7 +5,7 @@ require_relative 'route_interceptor'
 
 module RailsRoutesAnalyzer
 
-  RESOURCE_ACTIONS = [:index, :create, :new, :show, :update, :destroy, :edit]
+  RESOURCE_ACTIONS = [:index, :create, :new, :show, :update, :destroy, :edit].freeze
 
   class RouteAnalysis
     attr_accessor :app, :verbose, :only_only, :only_except
@@ -21,9 +21,9 @@ module RailsRoutesAnalyzer
     end
 
     def clear_data
-      self.route_lines   = []
+      self.route_lines = []
       self.route_calls = []
-      self.route_log     = []
+      self.route_log   = []
     end
 
     def prepare_for_analysis
@@ -54,9 +54,11 @@ module RailsRoutesAnalyzer
     end
 
     def generate_route_lines
-      route_calls.group_by do |record|
-        [ record.full_filename, record.line_number ]
-      end.each do |(full_filename, line_number), records|
+      calls_per_line = route_calls.group_by do |record|
+        [record.full_filename, record.line_number]
+      end
+
+      calls_per_line.each do |(full_filename, line_number), records|
         route_lines << RouteLine.new(full_filename: full_filename,
                                      line_number:   line_number,
                                      records:       records)
@@ -89,11 +91,9 @@ module RailsRoutesAnalyzer
 
     # Checks which if any actions referred to by the route don't exist.
     def analyze_action_availability(controller, route_call, **opts)
-      present, missing = opts[:action_names].partition {|name| controller.action_methods.include?(name.to_s) }
+      present, missing = opts[:action_names].partition { |name| controller.action_methods.include?(name.to_s) }
 
-      if present.any?
-        route_call[:present_actions] = present
-      end
+      route_call[:present_actions] = present if present.any?
 
       if SINGLE_METHODS.include?(opts[:route_creation_method])
         # NOTE a single call like 'get' can add multiple actions if called in a loop
@@ -116,10 +116,10 @@ module RailsRoutesAnalyzer
     end
 
     def resource_route_suggested_param(present)
-      suggested_param = if (present.size < 4 || only_only) && !only_except
-        "only: [#{present.sort.map {|x| ":#{x}" }.join(', ')}]"
+      if (present.size < 4 || only_only) && !only_except
+        "only: [#{present.sort.map { |x| ":#{x}" }.join(', ')}]"
       else
-        "except: [#{(RESOURCE_ACTIONS - present).sort.map {|x| ":#{x}" }.join(', ')}]"
+        "except: [#{(RESOURCE_ACTIONS - present).sort.map { |x| ":#{x}" }.join(', ')}]"
       end
     end
 
