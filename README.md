@@ -18,27 +18,24 @@ And then execute:
 
 ## Usage
 
+### Finding and fixing dead routes
+
 ``` sh
 rake routes:dead
 ```
 
-Without any additional options this will scan all the routes and check for a matching action for each. For single routes created with methods such as `get' or `post' it will tell you when that line could be removed.
+Without any additional options this will scan all the routes and check for a matching action for each. For single routes created with methods such as _get_ or _post_ it will tell you when that line could be removed.
 
-For multi-route calls like `resource' and `resources' it can also let you know if and how to set the :except or :only parameter to better match the actions a controller actually provides. When suggesting :only/:except by default the one that provides a shorter list will be used.
+For multi-route calls like _resource_ and _resources_ it can also let you know if and how to set the _:except_ or _:only_ parameter to better match the actions a controller actually provides. When suggesting _:only_/_:except_ by default the one that provides a shorter list will be used.
 
-For complex cases where for example a routes are created in a loop for multiple controllers a suggestion will be provided for each iteration but only if that specific iteration created a dead route. Every such suggestion will identify the exact controller to which it applies.
+For complex cases where for example routes are created in a loop for multiple controllers a suggestion will be provided for each iteration but only if that specific iteration created a dead route. Every such suggestion will identify the exact controller to which it applies.
 
 ``` sh
 rake routes:dead:annotate [ROUTES_FILE=path/to/routes.rb]
 rake routes:dead:fix      [ROUTES_FILE=path/to/routes.rb]
-
-# Best used like this:
-rake routes:dead:annotate > config/routest.rb.new
-mv config/routes.rb.new config/routes.rb
-# And then update the file as requested in any SUGGESTION comments
 ```
 
-_routes:dead:annotate_ generates a commented version of a routes file. _routes:dead:fix_ generates a partly automatically fixed and partly commented version of a routes file. Without specifying a file in ROUTES_FILE parameter one is automatically picked provided that it is the only one that has problems, if there are more they will all be listed and a single name will have to be provided in the ROUTES_FILE parameter.
+_routes:dead:annotate_ generates a commented version of a routes file. _routes:dead:fix_ generates a partly automatically fixed and partly commented version of a routes file. Without specifying a file in ROUTES_FILE parameter a file is automatically picked provided that it is the only one that has problems, if there are more they will all be listed and a single name will have to be provided in the ROUTES_FILE parameter to proceed.
 
 #### Additional options:
 
@@ -56,24 +53,28 @@ rake routes:dead:annotate:inplace[force] [ROUTES_FILE=path/to/routes.rb]
 rake routes:dead:fix:inplace[force]      [ROUTES_FILE=path/to/routes.rb]
 ```
 
-Same as above but these commands change existing routes file content instead of printing it to standard output. By default they'll refuse to change a file if it's outside Rails root or has uncommited changes. To get around this protection set the ROUTES_FORCE=1 parameter.
+Same as above but these commands change existing routes file content instead of printing it to standard output. By default they'll refuse to change a file if it's outside Rails root, not under git control or has uncommited changes. To get around this protection set the ROUTES_FORCE=1 parameter or include _[force]_ rake parameter.
 
+### Listing actions that lack a route
 
 ```sh
 rake actions:missing_route
 rake actions:missing_route[gems,modules,duplicates,full,metadata] # parameters can be combined in all ways
 ```
 
-Lists all action methods for all controllers which have no route pointing to them. By default ignores methods coming from gems, included modules or inherited from a parent controller. Uses the ActionController#Base.action\_methods method which usually returns a list of all public methods of the controller class excluding any special Rails provided methods.
+Lists all action methods for all controllers which have no route pointing to them. By default ignores methods coming from gems, from included modules or which are inherited from a parent controller. Uses the ActionController#Base.action\_methods method which usually returns a list of all public methods of the controller class excluding any special Rails provided methods.
 
-Generally it's not a problem to have ActionController#Base.action\_methods list non-actions given Rails no longer uses default routes that would benefit from proper limits on what is and what isn't an action. However there is also no obvious reason to be unable to correct it and possibly be able to use the more accurate metadata somewhere else (such as this tool).
+Generally it's not a problem to have ActionController#Base.action\_methods list non-actions given Rails no longer uses default routes that would benefit from proper limits on what is and what isn't an action. However there is also no obvious reason to be unable to correct it and possibly be able to use the resulting more accurate action metadata somewhere else (such as this tool).
 
-The easiest way to remove non-actions from ActionController#Base.action\_methods is to make them protected or private. If that's not possible the other alternative is to override the action\_methods method itself and remove the relevant methods from the returned action list (this is more complicated and much more effort to keep updated.)
+The easiest way to remove non-actions from ActionController#Base.action\_methods is to make them protected or private. If that's not possible the other alternative is to override the action\_methods method itself on a controller and remove the relevant methods from the returned action list (this is more complicated and much more effort to keep updated.)
+
+### Listing all actions that the app implements regardless of routes
 
 ```sh
 rake actions:list_all
 rake actions:list_all[gems,modules,duplicates,full,metadata] # parameters can be combined in all ways
 ```
+This just provides a convenient way to list all actions in a controller class tree including the source file location for each one even if it comes from a gem (include the _[full]_ rake parameter to get full file path without shortening.)
 
 #### Additional options:
 _(applies to both actions:missing\_route and actions:list\_all)_
