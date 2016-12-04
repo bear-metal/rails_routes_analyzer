@@ -10,8 +10,8 @@ Gem::Specification.new do |spec|
   spec.email         = ["tarmo@bearmetal.eu"]
   spec.required_ruby_version = ">= 2.1.0"
 
-  spec.summary       = %q{Helps clean up rails routes}
-  #spec.description   = %q{}
+  spec.summary       = "Helps clean up rails routes"
+  spec.description   = "Tools to identify and in some cases automatically remove unused Rails routes.\nAlso includes a tool to find action methods without routes and list all action methods provided by the application."
   spec.homepage      = "https://github.com/bear-metal/rails_routes_analyzer"
   spec.license       = "MIT"
 
@@ -23,11 +23,18 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_runtime_dependency "actionpack", ">= 3.2"
+  spec.add_runtime_dependency "git"
 
   spec.add_development_dependency "bundler", "~> 1.13"
   spec.add_development_dependency "rake", "~> 10.0"
-  spec.add_development_dependency "minitest", "~> 5.0"
+  spec.add_development_dependency "minitest", "~> 5.10.1"
   spec.add_development_dependency "minitest-reporters", "~> 1.1.12"
   spec.add_development_dependency "minitest-color", "~> 0.0.2"
+  spec.add_development_dependency "minitest-focus"
+  spec.add_development_dependency "minitest-autotest"
+  spec.add_development_dependency "autotest-suffix"
   spec.add_development_dependency "byebug"
+  spec.add_development_dependency "pry"
+  spec.add_development_dependency "awesome_print"
+  spec.add_development_dependency "simplecov"
 end

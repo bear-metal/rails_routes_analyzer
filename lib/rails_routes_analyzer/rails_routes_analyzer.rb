@@ -1,45 +1,84 @@
-require 'rails/railtie'
+require_relative 'gem_manager'
 
 module RailsRoutesAnalyzer
 
-  class Railtie < ::Rails::Railtie
-    rake_tasks do
-      load File.join(File.dirname(__FILE__), '../tasks/rails_routes_analyzer.rake')
-    end
-  end
-
-  MULTI_METHODS = %w[resource resources].freeze
-  SINGLE_METHODS = %w[match get head post patch put delete options root].freeze
+  MULTI_METHODS = %w(resource resources).freeze
+  SINGLE_METHODS = %w(match get head post patch put delete options root).freeze
   ROUTE_METHODS = (MULTI_METHODS + SINGLE_METHODS).freeze
 
-  def self.get_full_filename(filename)
-    return filename.to_s if filename.to_s.starts_with?('/')
-    Rails.root.join(filename).to_s
-  end
+  class << self
+    # Converts Rails.root-relative filenames to be absolute.
+    def get_full_filename(filename)
+      return filename.to_s if filename.to_s.starts_with?('/')
+      Rails.root.join(filename).to_s
+    end
 
-  RESOURCE_ACTIONS = [:index, :create, :new, :show, :update, :destroy, :edit]
+    # Shortens full file path, replacing Rails.root and gem path with
+    # appropriate short prefixes to make the file names look good.
+    def sanitize_source_location(source_location, full_path: false)
+      source_location.dup.tap do |clean_location|
+        unless full_path
+          clean_location.gsub! "#{Rails.root}/", './'
 
-  def self.identify_route_issues
-    RouteAnalysis.new
-  end
-
-  def self.get_all_defined_routes
-    identify_route_issues[:implemented_routes]
-  end
-
-  def self.get_all_action_methods(ignore_parent_provided: true)
-    [].tap do |result|
-      ApplicationController.descendants.each do |controller_class|
-        action_methods = controller_class.action_methods
-
-        if ignore_parent_provided && (super_class_actions = controller_class.superclass.try(:action_methods)).present?
-          action_methods -= super_class_actions
-        end
-
-        action_methods.each do |action_method|
-          result << [controller_class.name, action_method.to_sym]
+          clean_location.replace GemManager.clean_gem_path(clean_location)
         end
       end
+    end
+
+    def routes_dead(env)
+      params   = RailsRoutesAnalyzer::ParameterHandler.params_for_route_analysis(env)
+      analysis = RailsRoutesAnalyzer::RouteAnalysis.new(params)
+
+      analysis.print_report
+    end
+
+    def routes_dead_annotate(env)
+      routes_dead_annotate_common(env)
+    end
+
+    def routes_dead_annotate_inplace(env, extras)
+      routes_dead_annotate_common(env, extras, inplace: true)
+    end
+
+    def routes_dead_fix(env)
+      routes_dead_fix_common(env)
+    end
+
+    def routes_dead_fix_inplace(env, extras)
+      routes_dead_fix_common(env, extras, inplace: true)
+    end
+
+    def routes_actions_missing_route(env, extras)
+      routes_actions_common(env, extras, report_routed: false)
+    end
+
+    def routes_actions_list_all(env, extras)
+      routes_actions_common(env, extras, report_routed: true)
+    end
+
+    protected
+
+    def routes_dead_common(env, params, **opts)
+      annotator   = RailsRoutesAnalyzer::RouteFileAnnotator.new(params)
+      routes_file = RailsRoutesAnalyzer::ParameterHandler.file_to_annotate(env)
+
+      annotator.annotate_routes_file(routes_file, **opts)
+    end
+
+    def routes_dead_annotate_common(env, extras = [], **opts)
+      params = RailsRoutesAnalyzer::ParameterHandler.params_for_annotate(env, extras)
+      routes_dead_common(env, params, **opts)
+    end
+
+    def routes_dead_fix_common(env, extras = [], **opts)
+      params = RailsRoutesAnalyzer::ParameterHandler.params_for_fix(env, extras)
+      routes_dead_common(env, params, **opts)
+    end
+
+    def routes_actions_common(env, extras, **opts)
+      params = RailsRoutesAnalyzer::ParameterHandler.params_for_action_analysis(env, extras)
+      analysis = RailsRoutesAnalyzer::ActionAnalysis.new(params.merge(opts))
+      analysis.print_report
     end
   end
 

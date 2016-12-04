@@ -3,4 +3,7 @@ require "autotest/suffix"
 
 Autotest.add_hook :initialize do |at|
   at.testlib = "minitest/autorun"
+
+  at.add_exception 'test/dummy/tmp'
+  at.add_exception 'test/dummy/routes_bad-for-git-test.rb'
 end

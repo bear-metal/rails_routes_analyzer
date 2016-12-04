@@ -1,62 +1,40 @@
 namespace :routes do
-
-  desc 'Scan for dead-end routes including bad map.resource(s) :only/:except parameters'
+  desc 'Scan for dead-end routes'
   task dead: :environment do
-    analysis = RailsRoutesAnalyzer::RouteAnalysis.new(
-                 verbose:     !ENV['VERBOSE'].nil?,
-                 only_only:   !ENV['ONLY_ONLY'].nil?,
-                 only_except: !ENV['ONLY_EXCEPT'].nil?)
-
-    if analysis.issues.empty?
-      puts "No route issues found"
-      exit 0
-    end
-
-    analysis.issues.each do |issue|
-      puts issue.human_readable
-    end
+    RailsRoutesAnalyzer.routes_dead(ENV)
   end
 
-  desc "Output a routes file with suggested modifications in comments (NOTE: doesn't touch the original file)"
-  task annotate_dead: :environment do
-    annotator = RailsRoutesAnalyzer::RouteFileAnnotator.new
-    annotator.annotate_routes_file(ENV['ANNOTATE'])
-  end
+  namespace :dead do
+    desc "Output a routes file with suggested modifications in comments (doesn't change the original file)"
+    task annotate: :environment do
+      RailsRoutesAnalyzer.routes_dead_annotate(ENV)
+    end
 
-  desc 'Scan for controller action methods that are missing a route (pass STRICT=1 to account for inherited actions)'
-  task missing: :environment do
-    analysis = RailsRoutesAnalyzer::RouteAnalysis.new
-    implemented_routes = analysis.implemented_routes
-    all_action_methods = RailsRoutesAnalyzer.get_all_action_methods(ignore_parent_provided: ENV['STRICT'].blank?)
+    desc "Updates routes file(s) with suggestions for fixes in comments, requires unmodified git-controlled file(s)"
+    task :"annotate:inplace" => :environment do |_, args|
+      RailsRoutesAnalyzer.routes_dead_annotate_inplace(ENV, args.extras)
+    end
 
-    missing = all_action_methods.to_a - implemented_routes.to_a
+    desc "Outputs a routes file with simple fixes auto-applied others suggested in comments (doesn't change the original file)"
+    task fix: :environment do
+      RailsRoutesAnalyzer.routes_dead_fix(ENV)
+    end
 
-    if missing.any?
-      puts "NOTE Some gems, such as Devise, are expected to provide actions that have no matching"
-      puts "     routes in case a particular feature is not enabled, this is normal and expected."
-      puts "NOTE If any non-action methods are reported please consider making those non-public"
-      puts "     or using another solution that would make #action_methods not return those."
-      puts ""
-
-      unused_controllers = Set.new(all_action_methods.to_a.map(&:first) - implemented_routes.to_a.map(&:first))
-
-      if unused_controllers.any?
-        puts "Controllers with no routes pointing to them:"
-        unused_controllers.to_a.sort.each do |controller_name|
-          puts "  #{controller_name}"
-        end
-        puts ""
-      end
-
-      puts "Actions without a route:"
-      missing.sort.each do |(controller_name, action_name)|
-        unless unused_controllers.include?(controller_name)
-          puts "  #{controller_name}::#{action_name}"
-        end
-      end
-    else
-      puts "There are no actions without a route"
+    desc "Updates routes file(s) with simple fixes auto-applied others suggested in comments, requires unmodified git-controlled file(s)"
+    task :"fix:inplace" => :environment do |_, args|
+      RailsRoutesAnalyzer.routes_dead_fix_inplace(ENV, args.extras)
     end
   end
+end
 
+namespace :actions do
+  desc 'List application actions which have no routes mapped to them'
+  task missing_route: :environment do |_, args|
+    RailsRoutesAnalyzer.routes_actions_missing_route(ENV, args.extras)
+  end
+
+  desc 'List all actions provided by the application'
+  task list_all: :environment do |_, args|
+    RailsRoutesAnalyzer.routes_actions_list_all(ENV, args.extras)
+  end
 end
