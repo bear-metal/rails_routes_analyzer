@@ -51,6 +51,9 @@ ROUTES_VERBOSE=1 # more verbosity, currently this means listing which non-existi
 ``` sh
 rake routes:dead:annotate:inplace [ROUTES_FILE=path/to/routes.rb]
 rake routes:dead:fix:inplace      [ROUTES_FILE=path/to/routes.rb]
+
+rake routes:dead:annotate:inplace[force] [ROUTES_FILE=path/to/routes.rb]
+rake routes:dead:fix:inplace[force]      [ROUTES_FILE=path/to/routes.rb]
 ```
 
 Same as above but these commands change existing routes file content instead of printing it to standard output. By default they'll refuse to change a file if it's outside Rails root or has uncommited changes. To get around this protection set the ROUTES_FORCE=1 parameter.

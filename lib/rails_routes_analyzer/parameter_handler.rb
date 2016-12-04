@@ -8,11 +8,11 @@ module RailsRoutesAnalyzer
       }
     end
 
-    def self.params_for_annotate(env = ENV)
+    def self.params_for_annotate(env = ENV, extras = [])
       params_for_route_analysis.merge(
         try_to_fix:     false,
         allow_deleting: false,
-        force_overwrite: env['ROUTES_FORCE'].present?,
+        force_overwrite: env['ROUTES_FORCE'].present? || extras.include?('force'),
       )
     end
 
@@ -20,11 +20,11 @@ module RailsRoutesAnalyzer
       env['ROUTES_FILE']
     end
 
-    def self.params_for_fix(env = ENV)
+    def self.params_for_fix(env = ENV, extras = [])
       params_for_route_analysis.merge(
         try_to_fix:     true,
         allow_deleting: true,
-        force_overwrite: env['ROUTES_FORCE'].present?,
+        force_overwrite: env['ROUTES_FORCE'].present? || extras.include?('force'),
       )
     end
 
