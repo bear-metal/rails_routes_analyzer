@@ -3,12 +3,17 @@ $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 if ENV['SIMPLECOV']
   require 'simplecov'
   SimpleCov.start
+else
+  require 'awesome_print'
+  require 'byebug'
+  require 'pry'
 end
 
 require 'rails_routes_analyzer'
 
 require 'minitest/color'
 require 'minitest/reporters'
+require 'minitest/focus'
 require 'minitest/autorun'
 
 Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new

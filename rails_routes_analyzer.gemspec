@@ -30,6 +30,11 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "minitest", "~> 5.10.1"
   spec.add_development_dependency "minitest-reporters", "~> 1.1.12"
   spec.add_development_dependency "minitest-color", "~> 0.0.2"
+  spec.add_development_dependency "minitest-focus"
+  spec.add_development_dependency "minitest-autotest"
+  spec.add_development_dependency "autotest-suffix"
   spec.add_development_dependency "byebug"
+  spec.add_development_dependency "pry"
+  spec.add_development_dependency "awesome_print"
   spec.add_development_dependency "simplecov"
 end
