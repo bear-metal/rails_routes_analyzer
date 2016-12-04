@@ -146,7 +146,8 @@ module RailsRoutesAnalyzer
 
     def find_unused_controllers
       ActionController::Base.descendants.select do |controller|
-        controller_has_no_routes?(controller) && !(controller <= ::Rails::ApplicationController) \
+        controller_has_no_routes?(controller) \
+          && !(defined?(::Rails::ApplicationController) && controller <= ::Rails::ApplicationController) \
           && (options[:report_gems] || !controller_likely_from_gem?(controller))
       end
     end
