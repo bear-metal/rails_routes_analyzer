@@ -52,5 +52,19 @@ class FullItemsController < ApplicationController
   end
 end
 
+class SubclassHomeController < HomeController
+  def subclass_action
+  end
+end
+
 class EmptyController < ApplicationController
+end
+
+module ModuleWithAction
+  def module_provided_action
+  end
+end
+
+class ControllerIncludingModule < ApplicationController
+  include ModuleWithAction
 end

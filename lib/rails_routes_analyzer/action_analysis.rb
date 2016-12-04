@@ -74,8 +74,22 @@ module RailsRoutesAnalyzer
     #  report_routed     - report all actions including those with a route
     #  full_path         - skips shortening file paths
     #  metadata          - include discovered metadata about actions
-    def initialize(route_analysis: RailsRoutesAnalyzer::RouteAnalysis.new, **options)
-      @options = options
+    def initialize(route_analysis: RailsRoutesAnalyzer::RouteAnalysis.new,
+                   report_routed:     false,
+                   report_duplicates: false,
+                   report_gems:       false,
+                   report_modules:    false,
+                   full_path:         false,
+                   metadata:          false)
+
+      @options = {
+        report_routed:     report_routed,
+        report_duplicates: report_duplicates,
+        report_gems:       report_gems,
+        report_modules:    report_modules,
+        full_path:         full_path,
+        metadata:          metadata,
+      }
 
       @all_action_methods = analyze_action_methods(route_analysis: route_analysis)
 
@@ -83,16 +97,25 @@ module RailsRoutesAnalyzer
       @unused_controllers = find_unused_controllers
     end
 
+    def print_report
+      unless options[:report_routed]
+        print_missing_routes_report_preamble
+      end
+      print_actions_report
+    end
+
+    def print_actions_report
+      @controller_reporting_cache = {}
+
+      report_actions_recursive
+    end
+
+    protected
+
     def unused_actions_present?
       @all_action_methods.any? do |action|
         action.needs_reporting?(**options)
       end
-    end
-
-    def report_actions
-      @controller_reporting_cache = {}
-
-      report_actions_recursive
     end
 
     def actions_for(controller)
@@ -217,34 +240,32 @@ module RailsRoutesAnalyzer
       controller.instance_method(action_name).source_location.join(':')
     end
 
-    def print_report
-      unless options[:report_routed]
-        if unused_controllers.present?
-          puts "Controllers with no routes pointing to them:"
-          unused_controllers.sort_by(&:name).each do |controller|
-            puts "  #{controller.name}"
-          end
-          puts
-        end
+    PREAMBLE_WARNING = <<-EOS.strip_heredoc.freeze
+      NOTE Some gems, such as Devise, are expected to provide actions that have no matching
+           routes in case a particular feature is not enabled, this is normal and expected.
 
-        unless unused_actions_present?
-          puts "There are no actions without a route"
-          return
-        end
+           If any non-action methods are reported please consider making these
+           private/protected or customize #action_methods to exclude them.
 
-        puts <<-EOS.strip_heredoc
-          NOTE Some gems, such as Devise, are expected to provide actions that have no matching
-               routes in case a particular feature is not enabled, this is normal and expected.
+      Actions without a route:
 
-               If any non-action methods are reported please consider making those non-public
-               or using another solution that would make #action_methods not return those.
+    EOS
 
-          Actions without a route:
-
-        EOS
+    def print_missing_routes_report_preamble
+      unless unused_actions_present?
+        puts "There are no actions without a route"
+        return
       end
 
-      report_actions
+      if unused_controllers.present?
+        puts "Controllers with no routes pointing to them:"
+        unused_controllers.sort_by(&:name).each do |controller|
+          puts "  #{controller.name}"
+        end
+        puts ""
+      end
+
+      puts PREAMBLE_WARNING
     end
 
   end
