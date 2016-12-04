@@ -170,9 +170,13 @@ module RailsRoutesAnalyzer
     def find_unused_controllers
       ActionController::Base.descendants.select do |controller|
         controller_has_no_routes?(controller) \
-          && !(defined?(::Rails::ApplicationController) && controller <= ::Rails::ApplicationController) \
+          && !is_default_controller?(controller) \
           && (options[:report_gems] || !controller_likely_from_gem?(controller))
       end
+    end
+
+    def is_default_controller?(controller)
+      defined?(::Rails::ApplicationController) && controller <= ::Rails::ApplicationController
     end
 
     def no_direct_routes_to?(controller)
@@ -189,6 +193,8 @@ module RailsRoutesAnalyzer
 
       [].tap do |result|
         ActionController::Base.descendants.each do |controller|
+          next if is_default_controller?(controller)
+
           action_methods = controller.action_methods.to_a.map(&:to_sym)
 
           if (parent_controller = controller.superclass) == ActionController::Base
