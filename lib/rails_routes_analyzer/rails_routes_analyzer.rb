@@ -58,20 +58,21 @@ module RailsRoutesAnalyzer
 
     protected
 
-    def routes_dead_annotate_common(env, extras = [], **opts)
-      params      = RailsRoutesAnalyzer::ParameterHandler.params_for_annotate(env, extras)
+    def routes_dead_common(env, params, **opts)
       annotator   = RailsRoutesAnalyzer::RouteFileAnnotator.new(params)
       routes_file = RailsRoutesAnalyzer::ParameterHandler.file_to_annotate(env)
 
       annotator.annotate_routes_file(routes_file, **opts)
     end
 
-    def routes_dead_fix_common(env, extras = [], **opts)
-      params    = RailsRoutesAnalyzer::ParameterHandler.params_for_fix(env, extras)
-      annotator = RailsRoutesAnalyzer::RouteFileAnnotator.new(params)
-      routes_file = RailsRoutesAnalyzer::ParameterHandler.file_to_annotate(env)
+    def routes_dead_annotate_common(env, extras = [], **opts)
+      params = RailsRoutesAnalyzer::ParameterHandler.params_for_annotate(env, extras)
+      routes_dead_common(env, params, **opts)
+    end
 
-      annotator.annotate_routes_file(routes_file, **opts)
+    def routes_dead_fix_common(env, extras = [], **opts)
+      params = RailsRoutesAnalyzer::ParameterHandler.params_for_fix(env, extras)
+      routes_dead_common(env, params, **opts)
     end
 
     def routes_actions_common(env, extras, **opts)
