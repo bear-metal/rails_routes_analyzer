@@ -35,17 +35,17 @@ module RailsRoutesAnalyzer
 
       assert_equal [
         [["routes_clean.rb:2", "root", "home"], "home", :index, (["GET"] unless rails_3?)],
-	[["routes_clean.rb:4", "resources", "home"], "home", :show, ["GET"]],
-	[["routes_clean.rb:7", "get", "full_items"], "full_items", :custom, ["GET"]],
-	[["routes_clean.rb:10", "get", "full_items"], "full_items", :custom_index, ["GET"]],
-	[["routes_clean.rb:5", "resources", "full_items"], "full_items", :index, ["GET"]],
-	[["routes_clean.rb:5", "resources", "full_items"], "full_items", :create, ["POST"]],
-	[["routes_clean.rb:5", "resources", "full_items"], "full_items", :new, ["GET"]],
-	[["routes_clean.rb:5", "resources", "full_items"], "full_items", :edit, ["GET"]],
-	[["routes_clean.rb:5", "resources", "full_items"], "full_items", :show, ["GET"]],
+        [["routes_clean.rb:4", "resources", "home"], "home", :show, ["GET"]],
+        [["routes_clean.rb:7", "get", "full_items"], "full_items", :custom, ["GET"]],
+        [["routes_clean.rb:10", "get", "full_items"], "full_items", :custom_index, ["GET"]],
+        [["routes_clean.rb:5", "resources", "full_items"], "full_items", :index, ["GET"]],
+        [["routes_clean.rb:5", "resources", "full_items"], "full_items", :create, ["POST"]],
+        [["routes_clean.rb:5", "resources", "full_items"], "full_items", :new, ["GET"]],
+        [["routes_clean.rb:5", "resources", "full_items"], "full_items", :edit, ["GET"]],
+        [["routes_clean.rb:5", "resources", "full_items"], "full_items", :show, ["GET"]],
         ([["routes_clean.rb:5", "resources", "full_items"], "full_items", :update, ["PATCH"]] unless rails_3?),
-	[["routes_clean.rb:5", "resources", "full_items"], "full_items", :update, ["PUT"]],
-	[["routes_clean.rb:5", "resources", "full_items"], "full_items", :destroy, ["DELETE"]],
+        [["routes_clean.rb:5", "resources", "full_items"], "full_items", :update, ["PUT"]],
+        [["routes_clean.rb:5", "resources", "full_items"], "full_items", :destroy, ["DELETE"]],
       ].compact, analysis.route_log
     end
 
@@ -131,21 +131,21 @@ module RailsRoutesAnalyzer
       analysis = setup_bad_routes
 
       expected = [
-	[["routes_bad.rb:2", "root", "home"], "home", :index, (["GET"] unless rails_3?)],
+        [["routes_bad.rb:2", "root", "home"], "home", :index, (["GET"] unless rails_3?)],
       ] + expected_resources("routes_bad.rb:4") + [
-	[["routes_bad.rb:7", "get", "full_items"], "full_items", :missing_member_action, ["GET"]],
-	[["routes_bad.rb:10", "post", "full_items"], "full_items", :missing_collection_action, ["POST"]],
-	[["routes_bad.rb:5", "resources", "full_items"], "full_items", :create, ["POST"]],
-	[["routes_bad.rb:5", "resources", "full_items"], "full_items", :new, ["GET"]],
-	[["routes_bad.rb:5", "resources", "full_items"], "full_items", :edit, ["GET"]],
-	[["routes_bad.rb:5", "resources", "full_items"], "full_items", :show, ["GET"]],
-	([["routes_bad.rb:5", "resources", "full_items"], "full_items", :update, ["PATCH"]] unless rails_3?),
-	[["routes_bad.rb:5", "resources", "full_items"], "full_items", :update, ["PUT"]],
-	[["routes_bad.rb:13", "resources", "full_items"], "full_items", :index, ["GET"]],
-	[["routes_bad.rb:13", "resources", "full_items"], "full_items", :destroy, ["DELETE"]],
-	[["routes_bad.rb:15", "get", "unknown_controller"], "unknown_controller", :index, ["GET"]],
-	[["routes_bad.rb:18", "get", "unknown_0"], "unknown_0", :index, ["GET"]],
-	[["routes_bad.rb:18", "get", "unknown_1"], "unknown_1", :index, ["GET"]]
+        [["routes_bad.rb:7", "get", "full_items"], "full_items", :missing_member_action, ["GET"]],
+        [["routes_bad.rb:10", "post", "full_items"], "full_items", :missing_collection_action, ["POST"]],
+        [["routes_bad.rb:5", "resources", "full_items"], "full_items", :create, ["POST"]],
+        [["routes_bad.rb:5", "resources", "full_items"], "full_items", :new, ["GET"]],
+        [["routes_bad.rb:5", "resources", "full_items"], "full_items", :edit, ["GET"]],
+        [["routes_bad.rb:5", "resources", "full_items"], "full_items", :show, ["GET"]],
+        ([["routes_bad.rb:5", "resources", "full_items"], "full_items", :update, ["PATCH"]] unless rails_3?),
+        [["routes_bad.rb:5", "resources", "full_items"], "full_items", :update, ["PUT"]],
+        [["routes_bad.rb:13", "resources", "full_items"], "full_items", :index, ["GET"]],
+        [["routes_bad.rb:13", "resources", "full_items"], "full_items", :destroy, ["DELETE"]],
+        [["routes_bad.rb:15", "get", "unknown_controller"], "unknown_controller", :index, ["GET"]],
+        [["routes_bad.rb:18", "get", "unknown_0"], "unknown_0", :index, ["GET"]],
+        [["routes_bad.rb:18", "get", "unknown_1"], "unknown_1", :index, ["GET"]]
       ] + expected_resources("routes_bad.rb:20") + expected_resources("routes_bad.rb:21")
       
       assert_equal expected.compact, analysis.route_log
@@ -194,10 +194,10 @@ module RailsRoutesAnalyzer
       assert_equal 1, issues_for_3.size
       expected = RouteCall.new(
         file_location: "routes_bad_loops.rb:3",
-	route_creation_method: "resource",
-	controller_name: "somethings",
-	controller_class_name: "SomethingsController",
-	action_names: [:destroy],
+        route_creation_method: "resource",
+        controller_name: "somethings",
+        controller_class_name: "SomethingsController",
+        action_names: [:destroy],
       )
       expected.add_issue RouteIssue::NoController.new(
                            error: "uninitialized constant SomethingsController")
