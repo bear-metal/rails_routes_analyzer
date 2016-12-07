@@ -4,18 +4,48 @@ module RailsRoutesAnalyzer
 
   # Plugs into ActionDispatch::Routing::Mapper::Mapping to help get detailed information
   # on which route was generated, exactly where and if there is a matching controller action
-  module RouteInterceptor
+  class RouteInterceptor
     ROUTE_METHOD_REGEX = %r{action_dispatch/routing/mapper.rb:[0-9]+:in `(#{Regexp.union(*::RailsRoutesAnalyzer::ROUTE_METHODS)})'\z}
 
-    def self.route_data
-      {}.tap do |result|
+    def initialize(app: Rails.application)
+      app.eager_load! # all controller classes need to be loaded
+
+      trace = TracePoint.trace(:return) do |tp|
+        if tp.defined_class <= ::ActionDispatch::Routing::Mapper::Mapping && tp.method_id == :initialize
+          options =
+            case Rails::VERSION::MAJOR
+            when 3
+              tp.self.instance_variable_get(:@options)
+            else
+              tp.self.instance_variable_get(:@defaults)
+            end
+
+          request_methods =
+            case Rails::VERSION::MAJOR
+            when 3, 4
+              tp.self.send(:conditions)[:request_method]
+            else
+              tp.self.send(:request_method).map(&:verb)
+            end
+
+          record_route(options[:controller], options[:action], request_methods)
+        end
+      end
+
+      app.reload_routes!
+    ensure
+      trace.disable
+    end
+
+    def route_data
+      @route_data ||= {}.tap do |result|
         route_log.each do |(location, _controller_name, action, _request_methods)|
           (result[location] ||= []) << action
         end
       end
     end
 
-    def self.route_log
+    def route_log
       @route_log ||= []
     end
 
@@ -42,26 +72,6 @@ module RailsRoutesAnalyzer
       end
     end
 
-    if Rails::VERSION::MAJOR == 3
-      def initialize(*args)
-        super.tap do
-          record_route(@options[:controller], @options[:action], conditions[:request_method])
-        end
-      end
-    elsif Rails::VERSION::MAJOR == 4
-      def initialize(*args)
-        super.tap do
-          record_route(@defaults[:controller], @defaults[:action], conditions[:request_method])
-        end
-      end
-    else # Rails 5+
-      def initialize(*args)
-        super.tap do
-          record_route(@defaults[:controller], @defaults[:action], request_method.map(&:verb))
-        end
-      end
-    end
-
     def record_route(controller_name, action, request_methods)
       return unless controller_name && action
 
@@ -72,7 +82,7 @@ module RailsRoutesAnalyzer
       else
         record = [location, controller_name, action.to_sym, request_methods]
 
-        RouteInterceptor.route_log << record
+        route_log << record
       end
     end
 

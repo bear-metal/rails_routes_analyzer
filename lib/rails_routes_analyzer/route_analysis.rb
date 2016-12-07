@@ -9,7 +9,7 @@ module RailsRoutesAnalyzer
 
   class RouteAnalysis
     attr_accessor :app, :verbose, :only_only, :only_except
-    attr_accessor :route_log, :route_lines, :route_calls
+    attr_accessor :route_lines, :route_calls
 
     def initialize(app: Rails.application, verbose: false, only_only: false, only_except: false)
       self.app         = app
@@ -21,26 +21,21 @@ module RailsRoutesAnalyzer
     end
 
     def clear_data
+      @route_interceptor = nil
       self.route_lines = []
       self.route_calls = []
-      self.route_log   = []
     end
 
-    def prepare_for_analysis
-      app.eager_load! # all controller classes need to be loaded
-
-      ::ActionDispatch::Routing::Mapper::Mapping.prepend RouteInterceptor
-
-      RouteInterceptor.route_log.clear
-
-      app.reload_routes!
+    def route_interceptor
+      @route_interceptor ||= RouteInterceptor.new(app: app)
     end
+
+    delegate :route_log, to: :route_interceptor
 
     def analyze!
       clear_data
-      prepare_for_analysis
 
-      RouteInterceptor.route_data.each do |(file_location, route_creation_method, controller_name), action_names|
+      route_interceptor.route_data.each do |(file_location, route_creation_method, controller_name), action_names|
         analyse_route_call(
           file_location:         file_location,
           route_creation_method: route_creation_method,
@@ -49,7 +44,6 @@ module RailsRoutesAnalyzer
         )
       end
 
-      route_log.concat RouteInterceptor.route_log
       generate_route_lines
     end
 
